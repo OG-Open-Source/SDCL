@@ -1,0 +1,13 @@
+# Task ID: 22
+# Title: Resolver: Implement 'Last Definition Wins'
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Implement the 'last definition wins' rule for merging/overriding keys during content inclusion resolution.
+# Details:
+
+
+# Test Strategy:
+Write unit tests with SDCL where a key is defined in both the source and target of a merge inclusion (e.g., `obj1: { a: 1, b: 2 }
+obj2: { b: 3, c: 4 }
+final: (obj1) (obj2)`). Verify that the key from the later inclusion (`obj2.b`) overrides the earlier one (`obj1.b`).

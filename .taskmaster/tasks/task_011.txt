@@ -1,0 +1,11 @@
+# Task ID: 11
+# Title: Parser: Object Parsing and Dot-Notation Keys
+# Status: in-progress
+# Dependencies: None
+# Priority: medium
+# Description: Implement the parser logic to handle object structures defined within curly braces `{}` and correctly parse nested objects based on dot-notation keys (`a.b.c: value`).
+# Details:
+
+
+# Test Strategy:
+Write unit tests for object parsing (e.g., `{ key: value }`, `{ a.b: value }`, `{ a: { b: value } }`). Verify that the parser correctly builds nested AST structures for dot-notation keys and standard objects.

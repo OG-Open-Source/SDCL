@@ -1,0 +1,11 @@
+# Task ID: 17
+# Title: Parser: Enforce Form Consistency
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Implement logic in the parser to detect if a document mixes Expanded and Compact forms and report an error if it does.
+# Details:
+
+
+# Test Strategy:
+Write unit tests with SDCL content that mixes forms (e.g., top-level key-value pairs followed by a root object `{...}`). Verify that the parser correctly identifies the mixed form and returns a syntax error.

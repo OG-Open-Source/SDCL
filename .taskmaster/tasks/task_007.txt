@@ -1,0 +1,11 @@
+# Task ID: 7
+# Title: Lexer: Handle Front Matter Delimiter
+# Status: done
+# Dependencies: None
+# Priority: medium
+# Description: Implement recognition of the '---' sequence on a new line as a FRONTMATTER_DELIMITER token in the lexer.
+# Details:
+
+
+# Test Strategy:
+Write unit tests for the lexer with '---' on a new line. Verify that the lexer correctly identifies and emits the FRONTMATTER_DELIMITER token.

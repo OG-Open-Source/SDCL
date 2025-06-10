@@ -1,0 +1,11 @@
+# Task ID: 12
+# Title: Parser: Array Parsing
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Implement the parser logic to handle array structures defined within square brackets `[]` and parse sequences of values.
+# Details:
+
+
+# Test Strategy:
+Write unit tests for array parsing (e.g., `[ value1 value2 ]`, `[ 1 "string" true ]`). Verify that the parser correctly builds array AST nodes.

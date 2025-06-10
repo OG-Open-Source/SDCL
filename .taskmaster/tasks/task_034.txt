@@ -1,0 +1,11 @@
+# Task ID: 34
+# Title: Write README Documentation
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Create a comprehensive `README.md` file explaining the project, how to install and use the library, providing code examples, and outlining the CLI usage.
+# Details:
+
+
+# Test Strategy:
+Review the `README.md` file for clarity, accuracy, and completeness. Ensure it covers installation, library usage examples, CLI usage, and links to the SDCL specification.

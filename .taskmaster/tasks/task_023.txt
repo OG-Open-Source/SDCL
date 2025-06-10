@@ -1,0 +1,11 @@
+# Task ID: 23
+# Title: Resolver: External .env Reference Resolution
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Implement the resolution of `.env.VAR` references by reading environment variables from the process.
+# Details:
+
+
+# Test Strategy:
+Write unit tests that set environment variables before parsing SDCL containing `.env.VAR` references (e.g., `config: { user: (.env.USER) }`). Verify that the resolver correctly fetches the environment variable value.

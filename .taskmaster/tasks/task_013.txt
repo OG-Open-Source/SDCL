@@ -1,0 +1,11 @@
+# Task ID: 13
+# Title: Parser: Enforce No Commas
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Modify the parser to detect and report an error if a comma (`,`) is found within an object or array.
+# Details:
+
+
+# Test Strategy:
+Write unit tests with invalid SDCL containing commas (e.g., `{ key1: value1, key2: value2 }`, `[ value1, value2 ]`). Verify that the parser correctly identifies the comma and returns a syntax error.
