@@ -289,6 +289,38 @@ SDCL supports two primary forms for representing data structures: Expanded Form 
   - Within a single SDCL document, expanded and compact forms **must not** be mixed. A document **must** fully adhere to one form to ensure consistent and predictable parsing.
   - **Choice:** Expanded form is recommended for complex, nested data structures or situations requiring high readability. Compact form is suitable for simple data structures, single-line configurations, or scenarios where minimizing file size is desired.
 
+### 4.6. Front Matter (Metadata Block)
+
+SDCL supports an optional "front matter" block, a syntax familiar from static site generators, which allows embedding an SDCL document for metadata at the beginning of a file. This feature enables seamless integration with other document formats, such as Markdown.
+
+- **Syntax and Delimiters:**
+- An SDCL front matter block **must** begin on the very first line of a file and **must** be delimited by a line containing three hyphens (`---`) at the beginning and end.
+- The content between the two `---` delimiters is parsed as a standard SDCL document.
+
+- **Parsing Rules:**
+- When a parser encounters `---` on the first line, it **must** enter a front-matter parsing mode.
+- It will read and parse the content as SDCL until it encounters the closing `---` line.
+- All content following the closing `---` is considered the main content of the file and **must** be ignored by the SDCL parser. It can be processed by other tools (e.g., a Markdown parser).
+- If a closing `---` is not found, the parser **should** throw an error.
+
+- **Use Case:**
+- This is primarily used to associate metadata (like title, author, date) with a primary document (like a blog post or a report written in Markdown).
+
+- **Example:**
+
+```markdown
+---
+# This block is parsed as SDCL
+title: "An Example with Front Matter"
+author: "OG-Open-Source"
+tags: [ "SDCL" "metadata" "example" ]
+---
+
+# Main Document Content
+
+This content is outside the SDCL front matter and would be processed separately.
+```
+
 ## 5. SDCL Syntax Examples
 
 This section provides comprehensive examples of SDCL syntax, covering various data types, structures, and referencing mechanisms.
@@ -479,6 +511,16 @@ key: "value" # This is an invalid end-of-line comment
 # Invalid: Mixing expanded and compact forms
 # mixed_form_example: { key1: "value1"
 #   key2: "value2" }
+
+# --- Front Matter Example ---
+# The following shows how SDCL can be used as a front matter in a document.
+# The content between the '---' lines is valid SDCL.
+---
+title: "My Document"
+date: 2025-06-10
+tags: [ "tech" "specs" "sdcl" ]
+---
+# This part of the document is not parsed by the SDCL parser.
 ```
 
 ## 6. Conclusion
