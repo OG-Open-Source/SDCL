@@ -1,0 +1,433 @@
+# 全域設定
+environments: [
+  {
+    name: "development"
+    debug_mode: true
+    log_level: "DEBUG"
+    api_base_url: "https://dev.api.example.com"
+  }
+  {
+    name: "staging"
+    debug_mode: false
+    log_level: "INFO"
+    api_base_url: "https://stg.api.example.com"
+  }
+  {
+    name: "production"
+    debug_mode: false
+    log_level: "ERROR"
+    api_base_url: "https://prod.api.example.com"
+    metrics_enabled: true
+    monitoring_endpoint: "http://monitor.example.com:9090"
+  }
+]
+
+# 服務定義
+services: {
+  # 用戶服務
+  user_service: {
+    version: "2.1.0"
+    replicas: 3
+    port: 8081
+    health_check_path: "/health"
+    dependencies: [
+      "auth_service"
+      "profile_service"
+    ]
+    database: {
+      type: "postgresql"
+      host: "db-user.example.com"
+      port: 5432
+      username: "user_db_admin"
+      password_env: "DB_USER_PASS"
+      max_connections: 100
+    }
+    logging: {
+      format: "json"
+      output: "stdout"
+      rotation: {
+        size_mb: 100
+        count: 10
+      }
+    }
+    endpoints: [
+      {
+        path: "/users"
+        method: "GET"
+        handler: "getUserList"
+        auth_required: true
+      }
+      {
+        path: "/users/{id}"
+        method: "GET"
+        handler: "getUserById"
+        cache: true
+      }
+      {
+        path: "/users"
+        method: "POST"
+        handler: "createUser"
+        validation_schema: "user_create_schema.json"
+      }
+    ]
+  }
+
+  # 認證服務
+  auth_service: {
+    version: "1.5.0"
+    replicas: 2
+    port: 8082
+    health_check_path: "/status"
+    jwt_secret_env: "JWT_SECRET_KEY"
+    token_expiry_minutes: 60
+    database: {
+      type: "mongodb"
+      host: "db-auth.example.com"
+      port: 27017
+      name: "auth_db"
+      username: "auth_user"
+      password_env: "DB_AUTH_PASS"
+    }
+    rate_limiting: {
+      enabled: true
+      max_requests_per_minute: 100
+      burst: 20
+    }
+  }
+
+  # 個人資料服務
+  profile_service: {
+    version: "1.8.0"
+    replicas: 2
+    port: 8083
+    health_check_path: "/probe"
+    cache_ttl_minutes: 15
+    database: {
+      type: "redis"
+      host: "cache-profile.example.com"
+      port: 6379
+      db_index: 0
+      password_env: "REDIS_PASS"
+    }
+    integrations: [
+      {
+        name: "email_service"
+        url: "http://email.example.com/api/v1/send"
+        timeout_ms: 2000
+      }
+      {
+        name: "sms_service"
+        url: "http://sms.example.com/send"
+        timeout_ms: 1500
+      }
+    ]
+  }
+
+  # 訂單服務
+  order_service: {
+    version: "3.0.0"
+    replicas: 4
+    port: 8084
+    dependencies: [
+      "user_service"
+      "product_service"
+      "payment_service"
+    ]
+    database: {
+      type: "mysql"
+      host: "db-order.example.com"
+      port: 3306
+      name: "orders"
+      username: "order_admin"
+      password_env: "DB_ORDER_PASS"
+      pool_size: 150
+    }
+    queues: [
+      {
+        name: "order_created_events"
+        type: "kafka"
+        brokers: ["kafka1:9092" "kafka2:9092"]
+        topic: "order_events"
+      }
+      {
+        name: "order_processing_queue"
+        type: "rabbitmq"
+        host: "rabbitmq.example.com"
+        queue_name: "process_orders"
+      }
+    ]
+  }
+
+  # 產品服務
+  product_service: {
+    version: "1.2.0"
+    replicas: 3
+    port: 8085
+    cache_enabled: true
+    cache_provider: "memcached"
+    cache_hosts: ["memcached1:11211" "memcached2:11211"]
+    database: {
+      type: "postgresql"
+      host: "db-product.example.com"
+      port: 5432
+      username: "product_db_user"
+      password_env: "DB_PRODUCT_PASS"
+    }
+    search_integration: {
+      provider: "elasticsearch"
+      host: "es-cluster.example.com"
+      port: 9200
+      index_name: "products_v1"
+    }
+  }
+
+  # 支付服務
+  payment_service: {
+    version: "2.0.0"
+    replicas: 3
+    port: 8086
+    external_gateways: [
+      {
+        name: "stripe"
+        api_key_env: "STRIPE_API_KEY"
+        webhook_secret_env: "STRIPE_WEBHOOK_SECRET"
+        currency_support: ["USD" "EUR" "JPY"]
+      }
+      {
+        name: "paypal"
+        client_id_env: "PAYPAL_CLIENT_ID"
+        client_secret_env: "PAYPAL_CLIENT_SECRET"
+        sandbox_mode: true
+      }
+    ]
+    security_headers: [
+      { Strict-Transport-Security: "max-age=31536000" }
+      { X-Content-Type-Options: "nosniff" }
+    ]
+  }
+
+  # 通知服務
+  notification_service: {
+    version: "1.0.0"
+    replicas: 2
+    port: 8087
+    email_provider: "sendgrid"
+    email_api_key_env: "SENDGRID_API_KEY"
+    sms_provider: "twilio"
+    twilio_sid_env: "TWILIO_ACCOUNT_SID"
+    twilio_token_env: "TWILIO_AUTH_TOKEN"
+    templates: {
+      welcome_email: "welcome_template.html"
+      order_confirmation: "order_confirm.html"
+      password_reset_sms: "password_reset.txt"
+    }
+  }
+}
+
+# 路由規則 (API Gateway 配置)
+api_gateway: {
+  port: 80
+  middlewares: [
+    "ratelimit"
+    "authentication"
+    "logging"
+  ]
+  routes: [
+    {
+      path: "/api/v1/users"
+      service: "user_service"
+      strip_prefix: true
+      methods: ["GET" "POST" "PUT" "DELETE"]
+      timeout_ms: 5000
+    }
+    {
+      path: "/api/v1/auth"
+      service: "auth_service"
+      strip_prefix: true
+      methods: ["POST"]
+      auth_optional: true
+    }
+    {
+      path: "/api/v1/profiles"
+      service: "profile_service"
+      strip_prefix: true
+      methods: ["GET" "PUT"]
+    }
+    {
+      path: "/api/v1/orders"
+      service: "order_service"
+      strip_prefix: true
+      methods: ["GET" "POST" "PUT"]
+      max_body_size_mb: 2
+    }
+    {
+      path: "/api/v1/products"
+      service: "product_service"
+      strip_prefix: true
+      methods: ["GET"]
+      cache_response: true
+    }
+    {
+      path: "/api/v1/payments"
+      service: "payment_service"
+      strip_prefix: true
+      methods: ["POST"]
+      require_https: true
+    }
+    {
+      path: "/api/v1/notifications"
+      service: "notification_service"
+      strip_prefix: true
+      methods: ["POST"]
+    }
+  ]
+}
+
+# 外部系統整合
+external_integrations: {
+  crm_system: {
+    type: "salesforce"
+    api_url: "https://salesforce.example.com/api"
+    client_id_env: "SF_CLIENT_ID"
+    client_secret_env: "SF_CLIENT_SECRET"
+    sync_frequency_minutes: 30
+    objects_to_sync: ["Leads" "Contacts" "Accounts"]
+  }
+  erp_system: {
+    type: "sap"
+    soap_endpoint: "http://sap.example.com/ws"
+    username: "sap_user"
+    password_env: "SAP_PASS"
+    module: "finance"
+  }
+}
+
+# 功能旗標 (Feature Flags)
+feature_flags: {
+  new_checkout_flow: {
+    enabled: true
+    description: "Enables the new redesigned checkout experience."
+    rollout_percentage: 50
+    environments: ["development" "staging"]
+  }
+  beta_reporting: {
+    enabled: false
+    description: "Access to beta reporting features."
+    allowed_roles: ["admin" "analyst"]
+  }
+  ai_recommendations: {
+    enabled: true
+    description: "AI-powered product recommendations."
+    experiments: [
+      {
+        name: "model_a_vs_b"
+        variants: [
+          { A: 0.6 }
+          { B: 0.4 }
+        ]
+        active: true
+      }
+    ]
+  }
+}
+
+# 資料庫連接池配置
+database_pools: {
+  default_pg_pool: {
+    min_connections: 10
+    max_connections: 200
+    idle_timeout_seconds: 300
+    connection_retry_attempts: 5
+  }
+  reporting_db_pool: {
+    min_connections: 5
+    max_connections: 50
+    idle_timeout_seconds: 600
+    read_only: true
+  }
+}
+
+# 排程任務
+scheduled_tasks: [
+  {
+    name: "nightly_data_cleanup"
+    # 每天午夜
+    cron: "0 0 * * *"
+    command: "/app/scripts/cleanup.sh"
+    environment: "production"
+    timeout_minutes: 60
+  }
+  {
+    name: "daily_report_generation"
+    # 每天凌晨2點
+    cron: "0 2 * * *"
+    command: "/app/scripts/generate_reports.py"
+    environment: ["production" "staging"]
+  }
+  {
+    name: "hourly_cache_refresh"
+    # 每小時
+    cron: "0 * * * *"
+    command: "/app/scripts/refresh_cache.sh"
+    service_target: "product_service"
+  }
+]
+
+# 為了讓文件看起來更「大」，我們重複一些服務區塊
+# 實際應用中，這些會是不同的服務定義
+
+# 庫存服務 (重複區塊範例)
+inventory_service: {
+  version: "1.0.0"
+  replicas: 2
+  port: 8088
+  health_check_path: "/healthz"
+  database: {
+    type: "postgresql"
+    host: "db-inventory.example.com"
+    port: 5432
+    username: "inv_user"
+    password_env: "DB_INV_PASS"
+  }
+  alerts: {
+    low_stock_threshold: 100
+    notification_emails: ["ops@example.com"]
+  }
+}
+
+# 供應商服務 (重複區塊範例)
+supplier_service: {
+  version: "1.1.0"
+  replicas: 1
+  port: 8089
+  api_key_env: "SUPPLIER_API_KEY"
+  endpoints: [
+    {
+      path: "/suppliers"
+      method: "GET"
+      handler: "getSupplierList"
+    }
+    {
+      path: "/suppliers/{id}/products"
+      method: "GET"
+      handler: "getSupplierProducts"
+    }
+  ]
+}
+
+# 報告服務 (重複區塊範例)
+reporting_service: {
+  version: "2.0.0"
+  replicas: 1
+  port: 8090
+  data_source: "data_warehouse"
+  database: {
+    type: "clickhouse"
+    host: "clickhouse.example.com"
+    port: 8123
+    name: "reports"
+    username: "report_user"
+    password_env: "CH_PASS"
+  }
+  report_types: ["daily_sales" "monthly_revenue" "user_behavior"]
+}
