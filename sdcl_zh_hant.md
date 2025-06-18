@@ -108,9 +108,13 @@ SDCL 強制執行一套嚴格的語法規則，以保證明確的解析和一致
   - **物件（表）：** 由用花括號（`{}`）括起來的鍵值對表示。物件中的每個鍵值對在展開態中應位於新行，或在壓縮態中用至少一個空格分隔。
   - **陣列：** 由用方括號（`[]`）括起來的值序列表示。陣列中的元素在展開態中應位於新行（若為複雜元素如物件）或用至少一個空格分隔（若為簡單標量值），在壓縮態中則用至少一個空格分隔。
 
-- **基本鍵值對語法：**
+- **鍵值指派語法：**
 
-  - 定義資料條目的基本語法是 `key: value`。冒號（`:`）將鍵與其對應的值分開。
+  - SDCL 對於指派標量值與結構化類型（物件和陣列）給鍵時，使用不同的運算子。此區別增強了清晰度並防止了歧義。
+  - **標量指派 (`=`):** 指派標量值（例如，字串、數字、布林值）時，**必須**使用等號 (`=`)。
+    - 範例: `key = "value"`, `version = 1.0`
+  - **結構指派 (`:`):** 指派物件 (`{...}`) 或陣列 (`[...]`) 給鍵時，**必須**使用冒號 (`:`)。
+    - 範例: `settings: { ... }`, `features: [ ... ]`
 
 - **物件範圍定義：**
   - 邏輯上屬於一個物件的鍵值對**必須**明確地用花括號（`{}`）括起來。這清晰地定義了資料的範圍和層次結構。
@@ -126,7 +130,7 @@ SDCL 強制執行一套嚴格的語法規則，以保證明確的解析和一致
 - **註釋：** SDCL 支援包含註釋以用於文件和清晰度：
   - **單行註釋：** 以井號（`#`）開頭。從 `#` 到行尾的所有文本都被視為註釋並被解析器忽略。
   - **位置：** 註釋**必須**出現在其自己的專用行上。
-  - **禁止行尾註釋：** 不允許註釋跟隨鍵值對或任何其他資料元素在同一行上（例如，`key: "value" # comment` 是無效的）。此規則確保了一致的格式並簡化了解析。
+  - **禁止行尾註釋：** 不允許註釋跟隨鍵值對或任何其他資料元素在同一行上（例如，`key = "value" # comment` 是無效的）。此規則確保了一致的格式並簡化了解析。
 
 ### 4.4. SDCL 獨特功能
 
@@ -144,48 +148,48 @@ SDCL 透過幾個獨特的功能脫穎而出，這些功能旨在增強配置和
 
   ```sdcl
   # 顯式標記的日期時間
-  startDate: <datetime>2024-05-26T18:30:00Z</datetime>
+  startDate = <datetime>2024-05-26T18:30:00Z</datetime>
   # 顯式標記的國家
-  userCountry: <country>TW</country>
+  userCountry = <country>TW</country>
   # 顯式標記的 Base64
-  imageData: <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
-  # 這些在功能上等同於其未標記的、正確引用的對應項（例如，`startDate: 2024-05-26T18:30:00Z`）。
+  imageData = <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
+  # 這些在功能上等同於其未標記的、正確引用的對應項（例如，`startDate = 2024-05-26T18:30:00Z`）。
   ```
 
 - **基於路徑的引用與內容包含：**
 
-  - SDCL 利用點表示法（`.`）來表示文件中的層次路徑，其中 `XXX.YYY: value` 被解析為 `XXX: { YYY: value }`。此表示法是 SDCL 強大引用和包含機制的核心：
+  - SDCL 利用點表示法（`.`）來表示文件中的層次路徑，其中 `XXX.YYY = value` 被解析為 `XXX: { YYY = value }`。此表示法是 SDCL 強大引用和包含機制的核心：
 
   1.  **值引用（在鍵值對中）：**
 
-      - **語法：** `key: (path.to.value)`
+      - **語法：** `key = (path.to.value)`
       - **目的：** 此語法允許鍵的值動態引用位於*同一 SDCL 檔案*中指定路徑的另一個值。這建立了一個即時連結：如果引用的值發生變更，引用鍵的值將自動更新。
       - **範例：**
 
       ```sdcl
-      base.config.defaultLogLevel: "DEBUG"
+      base.config.defaultLogLevel = "DEBUG"
       # service.logging.level 將會是 "DEBUG"
-      service.logging.level: (base.config.defaultLogLevel)
+      service.logging.level = (base.config.defaultLogLevel)
       ```
 
   2.  **內容包含（物件/陣列，不帶鍵名）：**
 
-      - **語法：** `(path.to.object_or_array)` （獨立於一行，不帶冒號和值）
+      - **語法：** `(path.to.object_or_array)` （獨立於一行，不帶指派運算子和值）
       - **目的：** 此機制用於將已定義物件或陣列的*內容*（巢狀元素）直接嵌入到目前範圍中。它的功能類似於 YAML 的合併鍵（`<<: *alias`），但用於直接內容注入而不包含來源鍵名本身。如果引用的路徑不存在，或解析到的值不是預期的類型（例如，對於物件包含，路徑指向一個標量值），解析器必須拋出錯誤。
       - **範例：**
 
       ```sdcl
       common_resource_limits: {
-        cpu: "500m"
-        memory: "512Mi"
+        cpu = "500m"
+        memory = "512Mi"
       }
       service.resources.limits: {
-        # 插入 cpu: "500m" 和 memory: "512Mi"
+        # 插入 cpu = "500m" 和 memory = "512Mi"
         (common_resource_limits)
-        # 覆寫 common_resource_limits 的 cpu: "500m" 成 cpu: "250m"
-        cpu: "250m"
+        # 覆寫 common_resource_limits 的 cpu 值
+        cpu = "250m"
       }
-      # service.resources.limits 的結果為 { cpu: "250m", memory: "512Mi" }
+      # service.resources.limits 的結果為 { cpu = "250m", memory = "512Mi" }
       # 此為 JSON 語法，SDCL 不使用逗號作為分隔符
       ```
 
@@ -195,14 +199,14 @@ SDCL 透過幾個獨特的功能脫穎而出，這些功能旨在增強配置和
       - **範例：**
       ```sdcl
       users: [
-        { id: 1 name: "Alice" }
-        { id: 2 name: "Bob" }
+        { id = 1 name = "Alice" }
+        { id = 2 name = "Bob" }
       ]
       user_data_container: {
         # 插入完整的 users 陣列
         ((users))
       }
-      # user_data_container 的結果為 { users: [ {id:1, name:"Alice"}, {id:2, name:"Bob"} ] }
+      # user_data_container 的結果為 { users: [ { id = 1, name = "Alice" }, { id = 2, name = "Bob" } ] }
       # 此為 JSON 語法，SDCL 不使用逗號作為分隔符
       ```
 
@@ -215,10 +219,10 @@ SDCL 透過幾個獨特的功能脫穎而出，這些功能旨在增強配置和
 
   ```sdcl
   # 引用名為 API_KEY 的環境變量
-  api.key: .env.API_KEY
+  api.key = .env.API_KEY
 
   # 從 config.sdcl 中，引用 database.port 對應值
-  my.external.port: .config.sdcl.database.port
+  my.external.port = .config.sdcl.database.port
   ```
 
   - **`.XXX.sdcl.KEY` 引用：** 此語法用於引用另一個 SDCL 檔案（`XXX.sdcl`）中的值。解析器需要定義一個檔案解析策略。通常，這可能涉及：
@@ -235,25 +239,25 @@ SDCL 透過幾個獨特的功能脫穎而出，這些功能旨在增強配置和
   ```sdcl
   # 透過內容包含進行覆蓋
   default_settings: {
-    timeout: 1000
-    retries: 3
+    timeout = 1000
+    retries = 3
   }
   service_config: {
     (default_settings)
-    retries: 5 # 覆蓋 default_settings 中的 retries
+    retries = 5 # 覆蓋 default_settings 中的 retries
   }
-  # 結果: service_config: { timeout: 1000, retries: 5 }
+  # 結果: service_config: { timeout = 1000, retries = 5 }
 
   # 透過值引用進行覆蓋
-  base.url: "http://example.com"
-  api.endpoint: (base.url)
-  base.url: "http://new-example.com" # 覆蓋 base.url，api.endpoint 也會更新
-  # 結果: api.endpoint: "http://new-example.com"
+  base.url = "http://example.com"
+  api.endpoint = (base.url)
+  base.url = "http://new-example.com" # 覆蓋 base.url，api.endpoint 也會更新
+  # 結果: api.endpoint = "http://new-example.com"
 
   # 無效：直接定義的重複鍵名
   # invalid_config: {
-  #   key1: "value1"
-  #   key1: "value2" # 錯誤：重複的鍵名
+  #   key1 = "value1"
+  #   key1 = "value2" # 錯誤：重複的鍵名
   # }
   ```
 
@@ -269,11 +273,11 @@ SDCL 支援兩種主要形式來表示資料結構：展開態（Expanded Form�
 
   ```sdcl
   application: {
-    name: "My App"
-    version: 1.0
+    name = "My App"
+    version = 1.0
     settings: {
-      debug: true
-      logLevel: "INFO"
+      debug = true
+      logLevel = "INFO"
     }
   }
   ```
@@ -282,7 +286,7 @@ SDCL 支援兩種主要形式來表示資料結構：展開態（Expanded Form�
   - 壓縮態允許在單行上定義物件和陣列，使用空格作為元素之間的分隔符。這種形式在空間效率方面更為緊湊，適用於簡單的資料結構或當需要最小化檔案大小時。
   - **範例：**
   ```sdcl
-  application:{name:"My App" version:1.0 settings:{debug:true logLevel:"INFO"}}
+  application:{name="My App" version=1.0 settings:{debug=true logLevel="INFO"}}
   features:["userManagement" "reporting" "notifications"]
   ```
 - **不可混用：**
@@ -311,8 +315,8 @@ SDCL 支援一個可選的「front matter」區塊，這是一種源於靜態網
 ```markdown
 ---
 # 此區塊會被當作 SDCL 解析
-title: "一個包含 Front Matter 的範例"
-author: "OG-Open-Source"
+title = "一個包含 Front Matter 的範例"
+author = "OG-Open-Source"
 tags: [ "SDCL" "metadata" "example" ]
 ---
 
@@ -331,154 +335,150 @@ tags: [ "SDCL" "metadata" "example" ]
 
 # SDCL 應用程式範例配置
 
-# 物件範圍內的基本鍵值對（key: value）
+# 基本鍵值對 (key = value) 與結構指派 (key: {...} 或 key: [...])
 application: {
-  name: "My SDCL App"
-  version: 1.0
-  enabled: true
-  debugMode: false
+  name = "My SDCL App"
+  version = 1.0
+  enabled = true
+  debugMode = false
 }
 
-# 數字和空值（這些類型標籤是可選的）
+# 數字和空值
 server: {
-  port: 8080
-  timeout: 30.5
-  maxConnections: 100
-  logLevel: "INFO"
-  adminEmail: null
+  port = 8080
+  timeout = 30.5
+  maxConnections = 100
+  logLevel = "INFO"
+  adminEmail = null
 }
 
-# 日期、時間、日期時間、國家和 Base64 類型（顯式類型標籤對於推斷是可選的）
+# 日期、時間、日期時間、國家和 Base64 類型
 event: {
-  startDate: <datetime>2024-05-26T18:30:00Z</datetime>
+  startDate = <datetime>2024-05-26T18:30:00Z</datetime>
   # 不帶顯式標籤的日期時間
-  endDate: 2024-05-27T09:00:00Z
-  eventDate: <date>2024-05-26</date>
+  endDate = 2024-05-27T09:00:00Z
+  eventDate = <date>2024-05-26</date>
   # 不帶顯式標籤的時間
-  eventTime: 18:30:00
+  eventTime = 18:30:00
   # 不帶顯式標籤的國家
-  originCountry: TW
+  originCountry = TW
   # 帶顯式標籤的國家
-  destinationCountry: <country>US</country>
+  destinationCountry = <country>US</country>
   # 帶顯式標籤的 Base64
-  profileImage: <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
+  profileImage = <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
   # 不帶顯式標籤的 Base64
-  documentContent: VGhpcyBpcyBhIHRlc3QgZG9jdW1lbnQu
+  documentContent = VGhpcyBpcyBhIHRlc3QgZG9jdW1lbnQu
 }
 
-# 使用點表示法（作為單行鍵值）的巢狀配置
-database.type: "PostgreSQL" # 等同 { "database": { "type": "PostgreSQL" } }
-database.host: "localhost" # 等同 { "database": { "host": "localhost" } }
-database.port: 5432 # 等同 { "database": { "port": 5432 } }
-database.user: "admin" # 等同 { "database": { "user": "admin" } }
-database.password: "secure_password_123" # 等同 { "database": { "password": "secure_password_123" } }
+# 使用點表示法的巢狀配置
+database.type = "PostgreSQL" # 等同 database: { type = "PostgreSQL" }
+database.host = "localhost"
+database.port = 5432
+database.user = "admin"
+database.password = "secure_password_123"
 
 # 直接使用 key: { ... } 定義巢狀物件
 database.connectionPool: {
-  maxSize: 20
-  idleTimeout: 60000
+  maxSize = 20
+  idleTimeout = 60000
 }
 
-# 字串陣列（元素用空格或換行符分隔）
+# 字串陣列
 features.enabledFeatures: [
   "userManagement"
   "reporting"
   "notifications"
 ]
 
-# 物件陣列（物件用空格或換行符分隔）
+# 物件陣列
 users: [
   {
-    id: 1
-    name: "Alice"
-    email: "alice@example.com"
+    id = 1
+    name = "Alice"
+    email = "alice@example.com"
   }
   {
-    id: 2
-    name: "Bob"
-    email: "bob@example.com"
+    id = 2
+    name = "Bob"
+    email = "bob@example.com"
   }
 ]
 
 # 值引用範例（內部引用）
 # 首先定義一個基本值
-base.config.defaultLogLevel: "DEBUG"
+base.config.defaultLogLevel = "DEBUG"
 
 # 現在，引用它
 # 此值將為 "DEBUG"，如果 base.config.defaultLogLevel 變更，它將自動更新。
-service.logging.level: (base.config.defaultLogLevel)
+service.logging.level = (base.config.defaultLogLevel)
 
-# 使用點前綴的外部引用範例
+# 外部引用範例
 # 引用名為 API_KEY 的環境變數。
-api.key: .env.API_KEY
+api.key = .env.API_KEY
 
-# 引用名為 'database.port' 的鍵，該鍵位於名為 'config.sdcl' 的外部 SDCL 檔案中。
-my.external.port: .config.sdcl.database.port
+# 引用外部 SDCL 檔案中的鍵
+my.external.port = .config.sdcl.database.port
 
 # 特定服務的配置
 service.api: {
-  baseUrl: "https://api.example.com/v1"
-  apiKey: "your_api_key_here"
+  baseUrl = "https://api.example.com/v1"
+  apiKey = "your_api_key_here"
   rateLimit: {
-    requestsPerMinute: 100
-    burst: 10
+    requestsPerMinute = 100
+    burst = 10
   }
 }
 
-# 內容包含範例（物件，不帶鍵名）使用 (path.to.object)
-# 此處包含 database.connectionPool 的內容。如果鍵衝突，後面的定義將覆蓋前面的定義。
+# 內容包含範例（物件，不帶鍵名）
+# 此處包含 database.connectionPool 的內容。
 db_settings: {
   (database.connectionPool)
   # 覆蓋 database.connectionPool 中的 'maxSize' 值。
-  maxSize: 25
+  maxSize = 25
 }
 
-# 內容包含範例（陣列，不帶鍵名）使用 (path.to.array)
-# 這演示了將一個陣列的元素合併到另一個陣列中。
-additional_features: ["adminPanel" "analyticsDashboard"]
+# 內容包含範例（陣列，不帶鍵名）
+additional_features: [ "adminPanel" "analyticsDashboard" ]
 all_features: [
   "userManagement"
   # 包含來自 'additional_features' 陣列的元素。
   (additional_features)
 ]
 
-# 內容包含範例（物件，帶鍵名）使用 ((path.to.object))
+# 內容包含範例（物件，帶鍵名）
 user_data_container: {
   # 包含整個 'users' 陣列，包括其鍵 'users'。
   ((users))
 }
 
-# 內容包含範例（物件，帶鍵名）使用 ((path.to.object)) 用於巢狀物件
+# 內容包含範例（物件，帶鍵名）用於巢狀物件
 service_limits: {
   # 包含整個 'rateLimit' 物件，包括其鍵 'rateLimit'。
   ((service.api.rateLimit))
 }
 
-# 值引用範例（獨立）使用 (path.to.value)
-# 這演示了一個值引用。
-# 如果 'database.port' 是 5432，那麼 'my.referenced.port' 將有效為 5432。
-my.referenced.port: (database.port)
+# 值引用範例（獨立）
+# 如果 'database.port' 是 5432，那麼 'my.referenced.port' 將為 5432。
+my.referenced.port = (database.port)
 
-# 值引用範例（獨立）用於物件內容包含 使用 (path.to.object)
-# 這演示了不帶鍵名的物件內容包含。
+# 物件內容包含（獨立）
 direct_db_settings: {
   (database.connectionPool)
-  # 覆蓋 'database.connectionPool' 中的 'idleTimeout' 值。
-  idleTimeout: 70000
+  # 覆蓋 'idleTimeout' 的值。
+  idleTimeout = 70000
 }
 
-# 值引用範例（獨立）用於陣列內容包含 使用 (path.to.array)
-# 這演示了不帶鍵名的陣列內容包含。
+# 陣列內容包含（獨立）
 direct_user_list: [
   (users)
 ]
 
 # 展開態和壓縮態範例
 expanded_example: {
-  key1: "value1"
+  key1 = "value1"
   nested_object: {
-    nested_key: 123
-    another_key: true
+    nested_key = 123
+    another_key = true
   }
   array_example: [
     "item1"
@@ -486,12 +486,18 @@ expanded_example: {
   ]
 }
 
-compact_example:{name:"My App" version:1.0 settings:{debug:true logLevel:"INFO"}}
+compact_example:{name="My App" version=1.0 settings:{debug=true logLevel="INFO"}}
 features:["userManagement" "reporting" "notifications"]
 
 # 無效語法範例
 # 無效：行尾註釋
-key: "value" # 這是無效的行尾註釋
+key = "value" # 這是無效的行尾註釋
+
+# 無效：使用冒號指派標量值
+# key: "value"
+
+# 無效：使用等號指派結構
+# my_object = { key = "value" }
 
 # 無效：陣列中使用逗號
 # invalid_array: [ "a", "b" ]
@@ -499,25 +505,17 @@ key: "value" # 這是無效的行尾註釋
 # 無效：字串使用單引號
 # invalid_string: 'test'
 
-# 無效：鍵名包含空格（在最後部分）
-# "invalid key name": "value"
-
 # 無效：在物件範圍內重複的鍵
 # duplicate_key_object: {
-#   myKey: "value1"
-#   myKey: "value2"
+#   myKey = "value1"
+#   myKey = "value2"
 # }
 
-# 無效：展開態和壓縮態混用
-# mixed_form_example: { key1: "value1"
-#   key2: "value2" }
-
 # --- Front Matter 範例 ---
-# 以下展示了 SDCL 如何作為文件中的 front matter 使用。
 # '---' 分隔線之間的內容是有效的 SDCL。
 ---
-title: "我的文件"
-date: 2025-06-10
+title = "我的文件"
+date = 2025-06-10
 tags: [ "tech" "specs" "sdcl" ]
 ---
 # 文件的這一部分不會被 SDCL 解析器解析。

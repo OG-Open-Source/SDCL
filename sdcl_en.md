@@ -108,9 +108,13 @@ SDCL enforces a strict set of syntax rules to ensure unambiguous parsing and con
   - **Objects (Tables):** Represented by key-value pairs enclosed in curly braces (`{}`). Each key-value pair within an object should be on a new line in expanded form, or separated by at least one space in compact form.
   - **Arrays:** Represented by a sequence of values enclosed in square brackets (`[]`). Elements within an array should be on a new line (for complex elements like objects) or separated by at least one space (for simple scalar values) in expanded form, and separated by at least one space in compact form.
 
-- **Basic Key-Value Pair Syntax:**
+- **Key-Value Assignment Syntax:**
 
-  - The basic syntax for defining a data entry is `key: value`. A colon (`:`) separates the key from its corresponding value.
+  - SDCL uses distinct operators for assigning scalar values versus structured types (objects and arrays) to a key. This distinction enhances clarity and prevents ambiguity.
+  - **Scalar Assignment (`=`):** For assigning scalar values (e.g., strings, numbers, booleans), the equals sign (`=`) **must** be used.
+    - Example: `key = "value"`, `version = 1.0`
+  - **Structured Assignment (`:`):** For assigning an object (`{...}`) or an array (`[...]`) to a key, the colon (`:`) **must** be used.
+    - Example: `settings: { ... }`, `features: [ ... ]`
 
 - **Object Scope Definition:**
   - Key-value pairs that logically belong to an object **must** be explicitly enclosed in curly braces (`{}`). This clearly defines the scope and hierarchy of the data.
@@ -126,7 +130,7 @@ SDCL enforces a strict set of syntax rules to ensure unambiguous parsing and con
 - **Comments:** SDCL supports the inclusion of comments for documentation and clarity:
   - **Single-line Comments:** Begin with a hash symbol (`#`). All text from `#` to the end of the line is considered a comment and is ignored by the parser.
   - **Placement:** Comments **must** appear on their own dedicated line.
-  - **Forbidden End-of-line Comments:** Comments are not allowed to follow a key-value pair or any other data element on the same line (e.g., `key: "value" # comment` is invalid). This rule ensures consistent formatting and simplifies parsing.
+  - **Forbidden End-of-line Comments:** Comments are not allowed to follow a key-value pair or any other data element on the same line (e.g., `key = "value" # comment` is invalid). This rule ensures consistent formatting and simplifies parsing.
 
 ### 4.4. SDCL Unique Features
 
@@ -144,48 +148,48 @@ SDCL stands out through several unique features designed to enhance data managem
 
   ```sdcl
   # Explicitly tagged datetime
-  startDate: <datetime>2024-05-26T18:30:00Z</datetime>
+  startDate = <datetime>2024-05-26T18:30:00Z</datetime>
   # Explicitly tagged country
-  userCountry: <country>TW</country>
+  userCountry = <country>TW</country>
   # Explicitly tagged Base64
-  imageData: <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
-  # These are functionally equivalent to their untagged, correctly quoted counterparts (e.g., `startDate: 2024-05-26T18:30:00Z`).
+  imageData = <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
+  # These are functionally equivalent to their untagged, correctly quoted counterparts (e.g., `startDate = 2024-05-26T18:30:00Z`).
   ```
 
 - **Path-Based Referencing and Content Inclusion:**
 
-  - SDCL utilizes dot notation (`.`) to represent hierarchical paths within a document, where `XXX.YYY: value` is parsed as `XXX: { YYY: value }`. This notation is central to SDCL's powerful referencing and inclusion mechanisms:
+  - SDCL utilizes dot notation (`.`) to represent hierarchical paths within a document, where `XXX.YYY = value` is parsed as `XXX: { YYY = value }`. This notation is central to SDCL's powerful referencing and inclusion mechanisms:
 
   1.  **Value Reference (within key-value pairs):**
 
-      - **Syntax:** `key: (path.to.value)`
+      - **Syntax:** `key = (path.to.value)`
       - **Purpose:** This syntax allows the value of a key to dynamically reference another value located at a specified path _within the same SDCL file_. This creates a live link: if the referenced value changes, the value of the referencing key will automatically update.
       - **Example:**
 
       ```sdcl
-      base.config.defaultLogLevel: "DEBUG"
+      base.config.defaultLogLevel = "DEBUG"
       # service.logging.level will be "DEBUG"
-      service.logging.level: (base.config.defaultLogLevel)
+      service.logging.level = (base.config.defaultLogLevel)
       ```
 
   2.  **Content Inclusion (Objects/Arrays, without key name):**
 
-      - **Syntax:** `(path.to.object_or_array)` (on its own line, without a colon and value)
+      - **Syntax:** `(path.to.object_or_array)` (on its own line, without an assignment operator and value)
       - **Purpose:** This mechanism is used to directly embed the _content_ (nested elements) of an already defined object or array into the current scope. It functions similarly to YAML's merge key (`<<: *alias`) but for direct content injection without including the source key name itself. If the referenced path does not point to an existing object or array, or if the resolved value is not the expected type (e.g., for object inclusion, the path points to a scalar value), the parser **must** throw an error.
       - **Example:**
 
       ```sdcl
       common_resource_limits: {
-        cpu: "500m"
-        memory: "512Mi"
+        cpu = "500m"
+        memory = "512Mi"
       }
       service.resources.limits: {
-        # Inserts cpu: "500m" and memory: "512Mi"
+        # Inserts cpu = "500m" and memory = "512Mi"
         (common_resource_limits)
         # Overrides the cpu value from common_resource_limits
-        cpu: "250m"
+        cpu = "250m"
       }
-      # Resulting structure for service.resources.limits: { cpu: "250m", memory: "512Mi" }
+      # Resulting structure for service.resources.limits: { cpu = "250m" memory = "512Mi" }
       # This is JSON syntax; SDCL does not use commas as separators.
       ```
 
@@ -195,14 +199,14 @@ SDCL stands out through several unique features designed to enhance data managem
       - **Example:**
       ```sdcl
       users: [
-        { id: 1 name: "Alice" }
-        { id: 2 name: "Bob" }
+        { id = 1 name = "Alice" }
+        { id = 2 name = "Bob" }
       ]
       user_data_container: {
         # Inserts the entire users array
         ((users))
       }
-      # Resulting structure for user_data_container: { users: [ {id:1, name:"Alice"}, {id:2, name:"Bob"} ] }
+      # Resulting structure for user_data_container: { users: [ { id = 1 name = "Alice" }, { id = 2 name = "Bob" } ] }
       # This is JSON syntax; SDCL does not use commas as separators.
       ```
 
@@ -215,10 +219,10 @@ SDCL stands out through several unique features designed to enhance data managem
 
   ```sdcl
   # Refers to an environment variable named API_KEY
-  api.key: .env.API_KEY
+  api.key = .env.API_KEY
 
   # Refers to a key named 'database.port' in an external SDCL file named 'config.sdcl'
-  my.external.port: .config.sdcl.database.port
+  my.external.port = .config.sdcl.database.port
   ```
 
   - **`.XXX.sdcl.KEY` Reference:** This syntax is used to reference a value in another SDCL file (`XXX.sdcl`). Parsers need to define a file resolution strategy. Typically, this might involve:
@@ -235,25 +239,25 @@ SDCL stands out through several unique features designed to enhance data managem
   ```sdcl
   # Overriding via content inclusion
   default_settings: {
-      timeout: 1000
-      retries: 3
+      timeout = 1000
+      retries = 3
   }
   service_config: {
       (default_settings)
-      retries: 5 # Overrides retries from default_settings
+      retries = 5 # Overrides retries from default_settings
   }
-  # Result: service_config: { timeout: 1000, retries: 5 }
+  # Result: service_config: { timeout = 1000, retries = 5 }
 
   # Overriding via value reference
-  base.url: "http://example.com"
-  api.endpoint: (base.url)
-  base.url: "http://new-example.com" # Overrides base.url, api.endpoint will also update
-  # Result: api.endpoint: "http://new-example.com"
+  base.url = "http://example.com"
+  api.endpoint = (base.url)
+  base.url = "http://new-example.com" # Overrides base.url, api.endpoint will also update
+  # Result: api.endpoint = "http://new-example.com"
 
   # Invalid: Duplicate directly defined key
   # invalid_config: {
-  #   key1: "value1"
-  #   key1: "value2" # Error: Duplicate key name
+  #   key1 = "value1"
+  #   key1 = "value2" # Error: Duplicate key name
   # }
   ```
 
@@ -269,11 +273,11 @@ SDCL supports two primary forms for representing data structures: Expanded Form 
 
   ```sdcl
   application: {
-    name: "My App"
-    version: 1.0
+    name = "My App"
+    version = 1.0
     settings: {
-      debug: true
-      logLevel: "INFO"
+      debug = true
+      logLevel = "INFO"
     }
   }
   ```
@@ -282,7 +286,7 @@ SDCL supports two primary forms for representing data structures: Expanded Form 
   - Compact form allows objects and arrays to be defined on a single line, using spaces as delimiters between elements. This form is more compact in terms of space efficiency and is suitable for simple data structures or when minimizing file size is desired.
   - **Example:**
   ```sdcl
-  application:{name:"My App" version:1.0 settings:{debug:true logLevel:"INFO"}}
+  application:{name="My App" version=1.0 settings:{debug=true logLevel="INFO"}}
   features:["userManagement" "reporting" "notifications"]
   ```
 - **Non-Interchangeable:**
@@ -311,8 +315,8 @@ SDCL supports an optional "front matter" block, a syntax familiar from static si
 ```markdown
 ---
 # This block is parsed as SDCL
-title: "An Example with Front Matter"
-author: "OG-Open-Source"
+title = "An Example with Front Matter"
+author = "OG-Open-Source"
 tags: [ "SDCL" "metadata" "example" ]
 ---
 
@@ -331,154 +335,150 @@ This section provides comprehensive examples of SDCL syntax, covering various da
 
 # SDCL Application Example Configuration
 
-# Basic key-value pairs within an object (key: value)
+# Basic key-value pairs (key = value) and structure assignments (key: {...} or key: [...])
 application: {
-  name: "My SDCL App"
-  version: 1.0
-  enabled: true
-  debugMode: false
+  name = "My SDCL App"
+  version = 1.0
+  enabled = true
+  debugMode = false
 }
 
-# Numbers and Null values (these type tags are optional)
+# Numbers and Null values
 server: {
-  port: 8080
-  timeout: 30.5
-  maxConnections: 100
-  logLevel: "INFO"
-  adminEmail: null
+  port = 8080
+  timeout = 30.5
+  maxConnections = 100
+  logLevel = "INFO"
+  adminEmail = null
 }
 
-# Date, Time, Datetime, Country, and Base64 types (explicit type tags are optional for inference)
+# Date, Time, Datetime, Country, and Base64 types
 event: {
-  startDate: <datetime>2024-05-26T18:30:00Z</datetime>
+  startDate = <datetime>2024-05-26T18:30:00Z</datetime>
   # Datetime without explicit tag
-  endDate: 2024-05-27T09:00:00Z
-  eventDate: <date>2024-05-26</date>
+  endDate = 2024-05-27T09:00:00Z
+  eventDate = <date>2024-05-26</date>
   # Time without explicit tag
-  eventTime: 18:30:00
+  eventTime = 18:30:00
   # Country without explicit tag
-  originCountry: TW
+  originCountry = TW
   # Country with explicit tag
-  destinationCountry: <country>US</country>
+  destinationCountry = <country>US</country>
   # Base64 with explicit tag
-  profileImage: <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
+  profileImage = <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
   # Base64 without explicit tag
-  documentContent: VGhpcyBpcyBhIHRlc3QgZG9jdW1lbnQu
+  documentContent = VGhpcyBpcyBhIHRlc3QgZG9jdW1lbnQu
 }
 
-# Nested configuration using dot notation (as single-line key-values)
-database.type: "PostgreSQL" # Equivalent to { "database": { "type": "PostgreSQL" } }
-database.host: "localhost" # Equivalent to { "database": { "host": "localhost" } }
-database.port: 5432 # Equivalent to { "database": { "port": 5432 } }
-database.user: "admin" # Equivalent to { "database": { "user": "admin" } }
-database.password: "secure_password_123" # Equivalent to { "database": { "password": "secure_password_123" } }
+# Nested configuration using dot notation
+database.type = "PostgreSQL" # Equivalent to database: { type = "PostgreSQL" }
+database.host = "localhost"
+database.port = 5432
+database.user = "admin"
+database.password = "secure_password_123"
 
 # Defining nested objects directly using key: { ... }
 database.connectionPool: {
-  maxSize: 20
-  idleTimeout: 60000
+  maxSize = 20
+  idleTimeout = 60000
 }
 
-# Array of strings (elements separated by spaces or newlines)
+# Array of strings
 features.enabledFeatures: [
   "userManagement"
   "reporting"
   "notifications"
 ]
 
-# Array of objects (objects separated by spaces or newlines)
+# Array of objects
 users: [
   {
-    id: 1
-    name: "Alice"
-    email: "alice@example.com"
+    id = 1
+    name = "Alice"
+    email = "alice@example.com"
   }
   {
-    id: 2
-    name: "Bob"
-    email: "bob@example.com"
+    id = 2
+    name = "Bob"
+    email = "bob@example.com"
   }
 ]
 
 # Value reference example (internal reference)
 # First, define a base value
-base.config.defaultLogLevel: "DEBUG"
+base.config.defaultLogLevel = "DEBUG"
 
 # Now, reference it
 # This value will be "DEBUG"; if base.config.defaultLogLevel changes, it will automatically update.
-service.logging.level: (base.config.defaultLogLevel)
+service.logging.level = (base.config.defaultLogLevel)
 
-# External reference example using dot prefix
+# External reference example
 # Refers to an environment variable named API_KEY
-api.key: .env.API_KEY
+api.key = .env.API_KEY
 
-# Refers to a key named 'database.port' in an external SDCL file named 'config.sdcl'
-my.external.port: .config.sdcl.database.port
+# Refers to a key in an external SDCL file
+my.external.port = .config.sdcl.database.port
 
 # Configuration for a specific service
 service.api: {
-  baseUrl: "https://api.example.com/v1"
-  apiKey: "your_api_key_here"
+  baseUrl = "https://api.example.com/v1"
+  apiKey = "your_api_key_here"
   rateLimit: {
-    requestsPerMinute: 100
-    burst: 10
+    requestsPerMinute = 100
+    burst = 10
   }
 }
 
-# Content inclusion example (object, without key name) using (path.to.object)
-# This includes the content of database.connectionPool. If keys conflict, later definitions will override earlier ones.
+# Content inclusion example (object, without key name)
+# This includes the content of database.connectionPool.
 db_settings: {
   (database.connectionPool)
   # Overrides the 'maxSize' value from database.connectionPool
-  maxSize: 25
+  maxSize = 25
 }
 
-# Content inclusion example (array, without key name) using (path.to.array)
-# This demonstrates merging elements of one array into another.
-additional_features: ["adminPanel" "analyticsDashboard"]
+# Content inclusion example (array, without key name)
+additional_features: [ "adminPanel" "analyticsDashboard" ]
 all_features: [
   "userManagement"
   # Includes elements from the 'additional_features' array.
   (additional_features)
 ]
 
-# Content inclusion example (object, with key name) using ((path.to.object))
+# Content inclusion example (object, with key name)
 user_data_container: {
   # Includes the entire 'users' array, including its key 'users'.
   ((users))
 }
 
-# Content inclusion example (object, with key name) using ((path.to.object)) for nested objects
+# Content inclusion example (object, with key name) for nested objects
 service_limits: {
   # Includes the entire 'rateLimit' object, including its key 'rateLimit'.
   ((service.api.rateLimit))
 }
 
-# Value reference example (standalone) using (path.to.value)
-# This demonstrates a value reference.
-# If 'database.port' is 5432, then 'my.referenced.port' will effectively be 5432.
-my.referenced.port: (database.port)
+# Value reference example (standalone)
+# If 'database.port' is 5432, then 'my.referenced.port' will be 5432.
+my.referenced.port = (database.port)
 
-# Value reference example (standalone) for object content inclusion using (path.to.object)
-# This demonstrates object content inclusion without a key name.
+# Object content inclusion (standalone)
 direct_db_settings: {
   (database.connectionPool)
-  # Overrides the 'idleTimeout' value from 'database.connectionPool'.
-  idleTimeout: 70000
+  # Overrides the 'idleTimeout' value.
+  idleTimeout = 70000
 }
 
-# Value reference example (standalone) for array content inclusion using (path.to.array)
-# This demonstrates array content inclusion without a key name.
+# Array content inclusion (standalone)
 direct_user_list: [
   (users)
 ]
 
 # Expanded and Compact Forms Examples
 expanded_example: {
-  key1: "value1"
+  key1 = "value1"
   nested_object: {
-    nested_key: 123
-    another_key: true
+    nested_key = 123
+    another_key = true
   }
   array_example: [
     "item1"
@@ -486,12 +486,18 @@ expanded_example: {
   ]
 }
 
-compact_example:{name:"My App" version:1.0 settings:{debug:true logLevel:"INFO"}}
+compact_example:{name="My App" version=1.0 settings:{debug=true logLevel="INFO"}}
 features:["userManagement" "reporting" "notifications"]
 
 # Invalid Syntax Examples
 # Invalid: End-of-line comment
-key: "value" # This is an invalid end-of-line comment
+key = "value" # This is an invalid end-of-line comment
+
+# Invalid: Assigning a scalar with a colon
+# key: "value"
+
+# Invalid: Assigning a structure with an equals sign
+# my_object = { key = "value" }
 
 # Invalid: Comma used in array
 # invalid_array: [ "a", "b" ]
@@ -499,25 +505,17 @@ key: "value" # This is an invalid end-of-line comment
 # Invalid: Single quotes used for string
 # invalid_string: 'test'
 
-# Invalid: Key name contains spaces (in the last part)
-# "invalid key name": "value"
-
 # Invalid: Duplicate key within object scope
 # duplicate_key_object: {
-#   myKey: "value1"
-#   myKey: "value2"
+#   myKey = "value1"
+#   myKey = "value2"
 # }
 
-# Invalid: Mixing expanded and compact forms
-# mixed_form_example: { key1: "value1"
-#   key2: "value2" }
-
 # --- Front Matter Example ---
-# The following shows how SDCL can be used as a front matter in a document.
 # The content between the '---' lines is valid SDCL.
 ---
-title: "My Document"
-date: 2025-06-10
+title = "My Document"
+date = 2025-06-10
 tags: [ "tech" "specs" "sdcl" ]
 ---
 # This part of the document is not parsed by the SDCL parser.

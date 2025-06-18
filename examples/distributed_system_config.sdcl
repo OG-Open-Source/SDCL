@@ -1,18 +1,18 @@
 # 系統核心設定
 system: {
-  name: "EnterpriseServiceMesh"
-  version: "3.2.1"
-  environment: "production"
-  debug_mode: false
-  log_level: "INFO"
-  data_center: "us-east-1"
-  maintenance_window_start: "02:00:00Z"
-  maintenance_window_duration_minutes: 60
+  name = "EnterpriseServiceMesh"
+  version = "3.2.1"
+  environment = "production"
+  debug_mode = false
+  log_level = "INFO"
+  data_center = "us-east-1"
+  maintenance_window_start = "02:00:00Z"
+  maintenance_window_duration_minutes = 60
   security: {
-    enable_https: true
-    min_tls_version: "TLSv1.3"
-    jwt_secret_key_path: "/etc/secrets/jwt_key.pem"
-    api_key_rotation_interval_hours: 24
+    enable_https = true
+    min_tls_version = "TLSv1.3"
+    jwt_secret_key_path = "/etc/secrets/jwt_key.pem"
+    api_key_rotation_interval_hours = 24
     allowed_ip_ranges: ["192.168.1.0/24" "10.0.0.0/8"]
   }
 }
@@ -20,118 +20,118 @@ system: {
 # --- 微服務配置範例 ---
 services: {
   user_management: {
-    enabled: true
-    port: 8081
-    replicas: 5
-    max_connections: 1000
-    timeout_seconds: 30
-    database_url: "jdbc:postgresql://db-usermgmt:5432/users_db"
-    cache_enabled: true
-    cache_ttl_minutes: 15
+    enabled = true
+    port = 8081
+    replicas = 5
+    max_connections = 1000
+    timeout_seconds = 30
+    database_url = "jdbc:postgresql://db-usermgmt:5432/users_db"
+    cache_enabled = true
+    cache_ttl_minutes = 15
     api_endpoints: {
-      user_profile: "/api/v1/users/{id}"
-      auth_login: "/api/v1/auth/login"
-      registration: "/api/v1/register"
+      user_profile = "/api/v1/users/{id}"
+      auth_login = "/api/v1/auth/login"
+      registration = "/api/v1/register"
     }
     metrics: {
-      prometheus_path: "/metrics"
-      grafana_dashboard_id: "user-dashboard-123"
+      prometheus_path = "/metrics"
+      grafana_dashboard_id = "user-dashboard-123"
     }
   }
   product_catalog: {
-    enabled: true
-    port: 8082
-    replicas: 7
-    max_connections: 1500
-    timeout_seconds: 45
-    database_url: "jdbc:mysql://db-catalog:3306/products_db"
-    image_cdn_url: "https://cdn.example.com/product-images/"
+    enabled = true
+    port = 8082
+    replicas = 7
+    max_connections = 1500
+    timeout_seconds = 45
+    database_url = "jdbc:mysql://db-catalog:3306/products_db"
+    image_cdn_url = "https://cdn.example.com/product-images/"
     features: {
-      fuzzy_search_enabled: true
-      recommendation_engine_enabled: true
-      new_product_alerts: true
+      fuzzy_search_enabled = true
+      recommendation_engine_enabled = true
+      new_product_alerts = true
     }
     integrations: {
-      inventory_service_url: "http://inventory-service:8083/api/v1/inventory"
-      supplier_api_key: "SUPPLIER_XYZ_API_KEY_123"
+      inventory_service_url = "http://inventory-service:8083/api/v1/inventory"
+      supplier_api_key = "SUPPLIER_XYZ_API_KEY_123"
     }
   }
   order_processing: {
-    enabled: true
-    port: 8084
-    replicas: 6
-    max_connections: 1200
-    timeout_seconds: 60
-    queue_name: "order_queue"
-    payment_gateway_url: "https://secure-payment.example.com/api/v2/process"
-    retry_attempts: 3
-    retry_delay_seconds: 5
+    enabled = true
+    port = 8084
+    replicas = 6
+    max_connections = 1200
+    timeout_seconds = 60
+    queue_name = "order_queue"
+    payment_gateway_url = "https://secure-payment.example.com/api/v2/process"
+    retry_attempts = 3
+    retry_delay_seconds = 5
     webhooks: {
-      order_status_update: "https://webhook.example.com/order_status"
-      new_order_alert: "https://alert.example.com/new_order"
+      order_status_update = "https://webhook.example.com/order_status"
+      new_order_alert = "https://alert.example.com/new_order"
     }
     tax_config: {
-      tax_rate_us: 0.075
-      tax_rate_eu: 0.2
-      apply_shipping_tax: true
+      tax_rate_us = 0.075
+      tax_rate_eu = 0.2
+      apply_shipping_tax = true
     }
   }
   inventory_management: {
-    enabled: true
-    port: 8083
-    replicas: 4
-    max_connections: 800
-    timeout_seconds: 20
+    enabled = true
+    port = 8083
+    replicas = 4
+    max_connections = 800
+    timeout_seconds = 20
     warehouse_locations: ["NY01" "LA02" "TX03"]
-    low_stock_threshold: 50
-    automatic_reorder_enabled: true
+    low_stock_threshold = 50
+    automatic_reorder_enabled = true
     suppliers: {
       supplier_a: {
-        name: "Alpha Supplies"
-        contact: "alpha@example.com"
-        api_url: "http://alpha-supplier.com/api"
-        priority: 1
+        name = "Alpha Supplies"
+        contact = "alpha@example.com"
+        api_url = "http://alpha-supplier.com/api"
+        priority = 1
       }
       supplier_b: {
-        name: "Beta Distributors"
-        contact: "beta@example.com"
-        api_url: "http://beta-distributor.com/api"
-        priority: 2
+        name = "Beta Distributors"
+        contact = "beta@example.com"
+        api_url = "http://beta-distributor.com/api"
+        priority = 2
       }
     }
   }
   notification: {
-    enabled: true
-    port: 8085
-    replicas: 3
-    max_connections: 500
-    timeout_seconds: 10
-    email_sender: "noreply@example.com"
-    sms_gateway_api_key: "SMS_GATEWAY_XYZ"
+    enabled = true
+    port = 8085
+    replicas = 3
+    max_connections = 500
+    timeout_seconds = 10
+    email_sender = "noreply@example.com"
+    sms_gateway_api_key = "SMS_GATEWAY_XYZ"
     templates: {
-      order_confirmation: "email_templates/order_confirmation.html"
-      shipping_update: "email_templates/shipping_update.html"
-      password_reset: "email_templates/password_reset.html"
+      order_confirmation = "email_templates/order_confirmation.html"
+      shipping_update = "email_templates/shipping_update.html"
+      password_reset = "email_templates/password_reset.html"
     }
     channels: {
-      email: true
-      sms: true
-      push_notifications: false
+      email = true
+      sms = true
+      push_notifications = false
     }
   }
   analytics: {
-    enabled: true
-    port: 8086
-    replicas: 2
-    max_connections: 400
-    timeout_seconds: 90
-    data_lake_path: "s3://data-lake/analytics/"
-    report_generation_interval_hours: 24
+    enabled = true
+    port = 8086
+    replicas = 2
+    max_connections = 400
+    timeout_seconds = 90
+    data_lake_path = "s3://data-lake/analytics/"
+    report_generation_interval_hours = 24
     dashboard_tools: ["Grafana" "Tableau"]
     data_sources: {
-      user_events: "kafka://user_events_topic"
-      product_interactions: "kafka://product_interactions_topic"
-      order_data: "kafka://order_data_topic"
+      user_events = "kafka://user_events_topic"
+      product_interactions = "kafka://product_interactions_topic"
+      order_data = "kafka://order_data_topic"
     }
   }
 }
@@ -139,18 +139,18 @@ services: {
 # --- 資料庫連線池設定 (可重複應用於多個服務) ---
 database_pools: {
   default: {
-    max_connections: 100
-    min_idle_connections: 10
-    connection_timeout_ms: 30000
-    idle_timeout_ms: 600000
-    validation_query: "SELECT 1"
+    max_connections = 100
+    min_idle_connections = 10
+    connection_timeout_ms = 30000
+    idle_timeout_ms = 600000
+    validation_query = "SELECT 1"
   }
   reporting: {
-    max_connections: 50
-    min_idle_connections: 5
-    connection_timeout_ms: 20000
-    idle_timeout_ms: 300000
-    read_only: true
+    max_connections = 50
+    min_idle_connections = 5
+    connection_timeout_ms = 20000
+    idle_timeout_ms = 300000
+    read_only = true
   }
 }
 
@@ -158,48 +158,48 @@ database_pools: {
 message_queues: {
   kafka: {
     brokers: ["kafka1:9092" "kafka2:9092" "kafka3:9092"]
-    topic_prefix: "app_prod_"
-    producer_acks: "all"
-    consumer_group_id: "my_app_group"
+    topic_prefix = "app_prod_"
+    producer_acks = "all"
+    consumer_group_id = "my_app_group"
   }
   rabbitmq: {
-    host: "rabbitmq.example.com"
-    port: 5672
-    username: "guest"
-    password: "guest"
-    virtual_host: "/"
+    host = "rabbitmq.example.com"
+    port = 5672
+    username = "guest"
+    password = "guest"
+    virtual_host = "/"
   }
 }
 
 # --- 外部整合設定 ---
 integrations: {
   payment_gateway: {
-    provider: "Stripe"
-    api_key: "sk_live_XXXXXXXXXXXXXXXXXXXX"
-    webhook_secret: "whsec_XXXXXXXXXXXXXXXXXXXX"
-    currency: "USD"
-    enable_3ds: true
+    provider = "Stripe"
+    api_key = "sk_live_XXXXXXXXXXXXXXXXXXXX"
+    webhook_secret = "whsec_XXXXXXXXXXXXXXXXXXXX"
+    currency = "USD"
+    enable_3ds = true
   }
   sms_provider: {
-    provider: "Twilio"
-    account_sid: "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    auth_token: "your_auth_token_here"
-    from_number: "+1501712266"
+    provider = "Twilio"
+    account_sid = "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    auth_token = "your_auth_token_here"
+    from_number = "+1501712266"
   }
 }
 
 # --- 服務發現配置 ---
 service_discovery: {
-  type: "Consul"
-  agent_address: "localhost:8500"
-  datacenter_tag: "prod_datacenter"
-  check_interval_seconds: 10
+  type = "Consul"
+  agent_address = "localhost:8500"
+  datacenter_tag = "prod_datacenter"
+  check_interval_seconds = 10
 }
 
 # --- 功能開關 (Feature Toggles) ---
 feature_toggles: {
-  new_user_onboarding_flow: true
-  beta_checkout_experience: false
-  dark_mode_theme: true
-  ai_powered_search: false
+  new_user_onboarding_flow = true
+  beta_checkout_experience = false
+  dark_mode_theme = true
+  ai_powered_search = false
 }

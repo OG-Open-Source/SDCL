@@ -108,9 +108,13 @@ SDCL 强制执行一套严格的语法规则，以保证明确的解析和一致
   - **对象（表）：** 由用花括号（`{}`）括起来的键值对表示。对象中的每个键值对在展开态中应位于新行，或在压缩态中用至少一个空格分隔。
   - **数组：** 由用方括号（`[]`）括起来的值序列表示。数组中的元素在展开态中应位于新行（若为复杂元素如对象）或用至少一个空格分隔（若为简单标量值），在压缩态中则用至少一个空格分隔。
 
-- **基本键值对语法：**
+- **键值指派语法：**
 
-  - 定义数据条目的基本语法是 `key: value`。冒号（`:`）将键与其对应的值分开。
+  - SDCL 对于指派标量值与结构化类型（对象和数组）给键时，使用不同的运算符。此区别增强了清晰度并防止了歧义。
+  - **标量指派 (`=`):** 指派标量值（例如，字符串、数字、布尔值）时，**必须**使用等号 (`=`)。
+    - 示例: `key = "value"`, `version = 1.0`
+  - **结构指派 (`:`):** 指派对象 (`{...}`) 或数组 (`[...]`) 给键时，**必须**使用冒号 (`:`)。
+    - 示例: `settings: { ... }`, `features: [ ... ]`
 
 - **对象范围定义：**
   - 逻辑上属于一个对象的键值对**必须**明确地用花括号（`{}`）括起来。这清晰地定义了数据的范围和层次结构。
@@ -126,7 +130,7 @@ SDCL 强制执行一套严格的语法规则，以保证明确的解析和一致
 - **注释：** SDCL 支持包含注释以用于文件和清晰度：
   - **单行注释：** 以井号（`#`）开头。从 `#` 到行尾的所有文本都被视为注释并被解析器忽略。
   - **位置：** 注释**必须**出现在其自己的专用行上。
-  - **禁止行尾注释：** 不允许注释跟随键值对或任何其他数据元素在同一行上（例如，`key: "value" # comment` 是无效的）。此规则确保了一致的格式并简化了解析。
+  - **禁止行尾注释：** 不允许注释跟随键值对或任何其他数据元素在同一行上（例如，`key = "value" # comment` 是无效的）。此规则确保了一致的格式并简化了解析。
 
 ### 4.4. SDCL 独特功能
 
@@ -144,48 +148,48 @@ SDCL 通过几个独特的功能脱颖而出，这些功能旨在增强配置和
 
   ```sdcl
   # 显式标记的日期时间
-  startDate: <datetime>2024-05-26T18:30:00Z</datetime>
+  startDate = <datetime>2024-05-26T18:30:00Z</datetime>
   # 显式标记的国家
-  userCountry: <country>TW</country>
+  userCountry = <country>TW</country>
   # 显式标记的 Base64
-  imageData: <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
-  # 这些在功能上等同于其未标记的、正确引用的对应项（例如，`startDate: 2024-05-26T18:30:00Z`）。
+  imageData = <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
+  # 这些在功能上等同于其未标记的、正确引用的对应项（例如，`startDate = 2024-05-26T18:30:00Z`）。
   ```
 
 - **基于路径的引用与内容包含：**
 
-  - SDCL 利用点表示法（`.`）来表示文件中的层次路径，其中 `XXX.YYY: value` 被解析为 `XXX: { YYY: value }`。此表示法是 SDCL 强大引用和包含机制的核心：
+  - SDCL 利用点表示法（`.`）来表示文件中的层次路径，其中 `XXX.YYY = value` 被解析为 `XXX: { YYY = value }`。此表示法是 SDCL 强大引用和包含机制的核心：
 
   1.  **值引用（在键值对中）：**
 
-      - **语法：** `key: (path.to.value)`
+      - **语法：** `key = (path.to.value)`
       - **目的：** 此语法允许键的值动态引用位于*同一 SDCL 文件*中指定路径的另一个值。这建立了一个即时链接：如果引用的值发生变更，引用键的值将自动更新。
       - **示例：**
 
       ```sdcl
-      base.config.defaultLogLevel: "DEBUG"
+      base.config.defaultLogLevel = "DEBUG"
       # service.logging.level 将会是 "DEBUG"
-      service.logging.level: (base.config.defaultLogLevel)
+      service.logging.level = (base.config.defaultLogLevel)
       ```
 
   2.  **内容包含（对象/数组，不带键名）：**
 
-      - **语法：** `(path.to.object_or_array)` （独立于一行，不带冒号和值）
+      - **语法：** `(path.to.object_or_array)` （独立于一行，不带指派运算符和值）
       - **目的：** 此机制用于将已定义对象或数组的*内容*（嵌套元素）直接嵌入到目前范围中。它的功能类似于 YAML 的合并键（`<<: *alias`），但用于直接内容注入而不包含来源键名本身。如果引用的路径不存在，或解析到的值不是预期的类型（例如，对于对象包含，路径指向一个标量值），解析器**必须**抛出错误。
       - **示例：**
 
       ```sdcl
       common_resource_limits: {
-        cpu: "500m"
-        memory: "512Mi"
+        cpu = "500m"
+        memory = "512Mi"
       }
       service.resources.limits: {
-        # 插入 cpu: "500m" 和 memory: "512Mi"
+        # 插入 cpu = "500m" 和 memory = "512Mi"
         (common_resource_limits)
-        # 覆盖 common_resource_limits 的 cpu: "500m" 成 cpu: "250m"
-        cpu: "250m"
+        # 覆盖 common_resource_limits 的 cpu 值
+        cpu = "250m"
       }
-      # service.resources.limits 的结果为 { cpu: "250m", memory: "512Mi" }
+      # service.resources.limits 的结果为 { cpu = "250m", memory = "512Mi" }
       # 此为 JSON 语法，SDCL 不使用逗号作为分隔符
       ```
 
@@ -195,14 +199,14 @@ SDCL 通过几个独特的功能脱颖而出，这些功能旨在增强配置和
       - **示例：**
       ```sdcl
       users: [
-        { id: 1 name: "Alice" }
-        { id: 2 name: "Bob" }
+        { id = 1 name = "Alice" }
+        { id = 2 name = "Bob" }
       ]
       user_data_container: {
         # 插入完整的 users 数组
         ((users))
       }
-      # user_data_container 的结果为 { users: [ {id:1, name:"Alice"}, {id:2, name:"Bob"} ] }
+      # user_data_container 的结果为 { users: [ { id = 1, name = "Alice" }, { id = 2, name = "Bob" } ] }
       # 此为 JSON 语法，SDCL 不使用逗号作为分隔符
       ```
 
@@ -215,10 +219,10 @@ SDCL 通过几个独特的功能脱颖而出，这些功能旨在增强配置和
 
   ```sdcl
   # 引用名为 API_KEY 的环境变量
-  api.key: .env.API_KEY
+  api.key = .env.API_KEY
 
   # 从 config.sdcl 中，引用 database.port 对应值
-  my.external.port: .config.sdcl.database.port
+  my.external.port = .config.sdcl.database.port
   ```
 
   - **`.XXX.sdcl.KEY` 引用：** 此语法用于引用另一个 SDCL 文件（`XXX.sdcl`）中的值。解析器需要定义一个文件解析策略。通常，这可能涉及：
@@ -235,25 +239,25 @@ SDCL 通过几个独特的功能脱颖而出，这些功能旨在增强配置和
   ```sdcl
   # 通过内容包含进行覆盖
   default_settings: {
-    timeout: 1000
-    retries: 3
+    timeout = 1000
+    retries = 3
   }
   service_config: {
     (default_settings)
-    retries: 5 # 覆盖 default_settings 中的 retries
+    retries = 5 # 覆盖 default_settings 中的 retries
   }
-  # 结果: service_config: { timeout: 1000, retries: 5 }
+  # 结果: service_config: { timeout = 1000, retries = 5 }
 
   # 通过值引用进行覆盖
-  base.url: "http://example.com"
-  api.endpoint: (base.url)
-  base.url: "http://new-example.com" # 覆盖 base.url，api.endpoint 也会更新
-  # 结果: api.endpoint: "http://new-example.com"
+  base.url = "http://example.com"
+  api.endpoint = (base.url)
+  base.url = "http://new-example.com" # 覆盖 base.url，api.endpoint 也会更新
+  # 结果: api.endpoint = "http://new-example.com"
 
   # 无效：直接定义的重复键名
   # invalid_config: {
-  #   key1: "value1"
-  #   key1: "value2" # 错误：重复的键名
+  #   key1 = "value1"
+  #   key1 = "value2" # 错误：重复的键名
   # }
   ```
 
@@ -269,11 +273,11 @@ SDCL 支持两种主要形式来表示数据结构：展开态（Expanded Form�
 
   ```sdcl
   application: {
-    name: "My App"
-    version: 1.0
+    name = "My App"
+    version = 1.0
     settings: {
-      debug: true
-      logLevel: "INFO"
+      debug = true
+      logLevel = "INFO"
     }
   }
   ```
@@ -282,7 +286,7 @@ SDCL 支持两种主要形式来表示数据结构：展开态（Expanded Form�
   - 压缩态允许在单行上定义对象和数组，使用空格作为元素之间分隔符。这种形式在空间效率方面更为紧凑，适用于简单的数据结构或当需要最小化文件大小时。
   - **示例：**
   ```sdcl
-  application:{name:"My App" version:1.0 settings:{debug:true logLevel:"INFO"}}
+  application:{name="My App" version=1.0 settings:{debug=true logLevel="INFO"}}
   features:["userManagement" "reporting" "notifications"]
   ```
 - **不可混用：**
@@ -308,18 +312,18 @@ SDCL 支持一个可选的“front matter”块，这是一种源于静态网站
 
 - **示例:**
 
-```markdown
----
-# 此区块会被当作 SDCL 解析
-title: "一个包含 Front Matter 的示例"
-author: "OG-Open-Source"
-tags: [ "SDCL" "metadata" "example" ]
----
+  ```markdown
+  ---
+  # 此区块会被当作 SDCL 解析
+  title = "一个包含 Front Matter 的示例"
+  author = "OG-Open-Source"
+  tags: [ "SDCL" "metadata" "example" ]
+  ---
 
-# 主要文件内容
+  # 主要文件内容
 
-这部分的内容在 SDCL front matter 之外，会被分开处理。
-```
+  这部分的内容在 SDCL front matter 之外，会被分开处理。
+  ```
 
 ## 5. SDCL 语法示例
 
@@ -331,154 +335,150 @@ tags: [ "SDCL" "metadata" "example" ]
 
 # SDCL 应用程序示例配置
 
-# 对象范围内基本键值对（key: value）
+# 基本键值对 (key = value) 与结构指派 (key: {...} 或 key: [...])
 application: {
-  name: "My SDCL App"
-  version: 1.0
-  enabled: true
-  debugMode: false
+  name = "My SDCL App"
+  version = 1.0
+  enabled = true
+  debugMode = false
 }
 
-# 数字和空值（这些类型标签是可选的）
+# 数字和空值
 server: {
-  port: 8080
-  timeout: 30.5
-  maxConnections: 100
-  logLevel: "INFO"
-  adminEmail: null
+  port = 8080
+  timeout = 30.5
+  maxConnections = 100
+  logLevel = "INFO"
+  adminEmail = null
 }
 
-# 日期、时间、日期时间、国家和 Base64 类型（显式类型标签对于推断是可选的）
+# 日期、时间、日期时间、国家和 Base64 类型
 event: {
-  startDate: <datetime>2024-05-26T18:30:00Z</datetime>
+  startDate = <datetime>2024-05-26T18:30:00Z</datetime>
   # 不带显式标签的日期时间
-  endDate: 2024-05-27T09:00:00Z
-  eventDate: <date>2024-05-26</date>
+  endDate = 2024-05-27T09:00:00Z
+  eventDate = <date>2024-05-26</date>
   # 不带显式标签的时间
-  eventTime: 18:30:00
+  eventTime = 18:30:00
   # 不带显式标签的国家
-  originCountry: TW
+  originCountry = TW
   # 带显式标签的国家
-  destinationCountry: <country>US</country>
+  destinationCountry = <country>US</country>
   # 带显式标签的 Base64
-  profileImage: <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
+  profileImage = <base64>T0dBVEEncyBTdGFuZGFyZCBEYXRhIENoYXJhY3RlciBTdG9yYWdlIExhbmd1YWdl</base64>
   # 不带显式标签的 Base64
-  documentContent: VGhpcyBpcyBhIHRlc3QgZG9jdW1lbnQu
+  documentContent = VGhpcyBpcyBhIHRlc3QgZG9jdW1lbnQu
 }
 
-# 使用点表示法（作为单行键值）的嵌套配置
-database.type: "PostgreSQL" # 等同 { "database": { "type": "PostgreSQL" } }
-database.host: "localhost" # 等同 { "database": { "host": "localhost" } }
-database.port: 5432 # 等同 { "database": { "port": 5432 } }
-database.user: "admin" # 等同 { "database": { "user": "admin" } }
-database.password: "secure_password_123" # 等同 { "database": { "password": "secure_password_123" } }
+# 使用点表示法的嵌套配置
+database.type = "PostgreSQL" # 等同 database: { type = "PostgreSQL" }
+database.host = "localhost"
+database.port = 5432
+database.user = "admin"
+database.password = "secure_password_123"
 
 # 直接使用 key: { ... } 定义嵌套对象
 database.connectionPool: {
-  maxSize: 20
-  idleTimeout: 60000
+  maxSize = 20
+  idleTimeout = 60000
 }
 
-# 字符串数组（元素用空格或换行符分隔）
+# 字符串数组
 features.enabledFeatures: [
   "userManagement"
   "reporting"
   "notifications"
 ]
 
-# 对象数组（对象用空格或换行符分隔）
+# 对象数组
 users: [
   {
-    id: 1
-    name: "Alice"
-    email: "alice@example.com"
+    id = 1
+    name = "Alice"
+    email = "alice@example.com"
   }
   {
-    id: 2
-    name: "Bob"
-    email: "bob@example.com"
+    id = 2
+    name = "Bob"
+    email = "bob@example.com"
   }
 ]
 
 # 值引用示例（内部引用）
 # 首先定义一个基本值
-base.config.defaultLogLevel: "DEBUG"
+base.config.defaultLogLevel = "DEBUG"
 
 # 现在，引用它
 # 此值将为 "DEBUG"；如果 base.config.defaultLogLevel 变更，它将自动更新。
-service.logging.level: (base.config.defaultLogLevel)
+service.logging.level = (base.config.defaultLogLevel)
 
-# 使用点前缀的外部引用示例
+# 外部引用示例
 # 引用名为 API_KEY 的环境变量。
-api.key: .env.API_KEY
+api.key = .env.API_KEY
 
-# 引用名为 'database.port' 的键，该键位于名为 'config.sdcl' 的外部 SDCL 文件中。
-my.external.port: .config.sdcl.database.port
+# 引用外部 SDCL 文件中的键
+my.external.port = .config.sdcl.database.port
 
 # 特定服务的配置
 service.api: {
-  baseUrl: "https://api.example.com/v1"
-  apiKey: "your_api_key_here"
+  baseUrl = "https://api.example.com/v1"
+  apiKey = "your_api_key_here"
   rateLimit: {
-    requestsPerMinute: 100
-    burst: 10
+    requestsPerMinute = 100
+    burst = 10
   }
 }
 
-# 内容包含示例（对象，不带键名）使用 (path.to.object)
-# 此处包含 database.connectionPool 的内容。如果键冲突，后面的定义将覆盖前面的定义。
+# 内容包含示例（对象，不带键名）
+# 此处包含 database.connectionPool 的内容。
 db_settings: {
   (database.connectionPool)
   # 覆盖 database.connectionPool 中的 'maxSize' 值。
-  maxSize: 25
+  maxSize = 25
 }
 
-# 内容包含示例（数组，不带键名）使用 (path.to.array)
-# 这演示了将一个数组的元素合并到另一个数组中。
-additional_features: ["adminPanel" "analyticsDashboard"]
+# 内容包含示例（数组，不带键名）
+additional_features: [ "adminPanel" "analyticsDashboard" ]
 all_features: [
   "userManagement"
   # 包含来自 'additional_features' 数组的元素。
   (additional_features)
 ]
 
-# 内容包含示例（对象，带键名）使用 ((path.to.object))
+# 内容包含示例（对象，带键名）
 user_data_container: {
   # 包含整个 'users' 数组，包括其键 'users'。
   ((users))
 }
 
-# 内容包含示例（对象，带键名）使用 ((path.to.object)) 用于嵌套对象
+# 内容包含示例（对象，带键名）用于嵌套对象
 service_limits: {
   # 包含整个 'rateLimit' 对象，包括其键 'rateLimit'。
   ((service.api.rateLimit))
 }
 
-# 值引用示例（独立）使用 (path.to.value)
-# 这演示了一个值引用。
-# 如果 'database.port' 是 5432，那么 'my.referenced.port' 将有效为 5432。
-my.referenced.port: (database.port)
+# 值引用示例（独立）
+# 如果 'database.port' 是 5432，那么 'my.referenced.port' 将为 5432。
+my.referenced.port = (database.port)
 
-# 值引用示例（独立）用于对象内容包含 使用 (path.to.object)
-# 这演示了不带键名的对象内容包含。
+# 对象内容包含（独立）
 direct_db_settings: {
   (database.connectionPool)
-  # 覆盖 'database.connectionPool' 中的 'idleTimeout' 值。
-  idleTimeout: 70000
+  # 覆盖 'idleTimeout' 的值。
+  idleTimeout = 70000
 }
 
-# 值引用示例（独立）用于数组内容包含 使用 (path.to.array)
-# 这演示了不带键名的数组内容包含。
+# 数组内容包含（独立）
 direct_user_list: [
   (users)
 ]
 
 # 展开态和压缩态示例
 expanded_example: {
-  key1: "value1"
+  key1 = "value1"
   nested_object: {
-    nested_key: 123
-    another_key: true
+    nested_key = 123
+    another_key = true
   }
   array_example: [
     "item1"
@@ -486,12 +486,18 @@ expanded_example: {
   ]
 }
 
-compact_example:{name:"My App" version:1.0 settings:{debug:true logLevel:"INFO"}}
+compact_example:{name="My App" version=1.0 settings:{debug=true logLevel="INFO"}}
 features:["userManagement" "reporting" "notifications"]
 
 # 无效语法示例
 # 无效：行尾注释
-key: "value" # 这是无效的行尾注释
+key = "value" # 这是无效的行尾注释
+
+# 无效：使用冒号指派标量值
+# key: "value"
+
+# 无效：使用等号指派结构
+# my_object = { key = "value" }
 
 # 无效：数组中使用逗号
 # invalid_array: [ "a", "b" ]
@@ -499,25 +505,17 @@ key: "value" # 这是无效的行尾注释
 # 无效：字符串使用单引号
 # invalid_string: 'test'
 
-# 无效：键名包含空格（在最后部分）
-# "invalid key name": "value"
-
 # 无效：在对象范围内重复的键
 # duplicate_key_object: {
-#   myKey: "value1"
-#   myKey: "value2"
+#   myKey = "value1"
+#   myKey = "value2"
 # }
 
-# 无效：展开态和压缩态混用
-# mixed_form_example: { key1: "value1"
-#   key2: "value2" }
-
 # --- Front Matter 示例 ---
-# 以下展示了 SDCL 如何作为文件中的 front matter 使用。
 # '---' 分隔线之间的内容是有效的 SDCL。
 ---
-title: "我的文件"
-date: 2025-06-10
+title = "我的文件"
+date = 2025-06-10
 tags: [ "tech" "specs" "sdcl" ]
 ---
 # 文件的这一部分不会被 SDCL 解析器解析。
