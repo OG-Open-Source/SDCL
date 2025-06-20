@@ -21,8 +21,8 @@ This repository contains the official documentation for SDCL (OGATA's Standard D
 The complete language specification is provided in an ISO standard-style format across multiple languages to ensure broad accessibility and clarity.
 
 - **English:** [`sdcl_en.md`](sdcl_en.md)
-- **Traditional Chinese (繁體中文):** [`sdcl_zh_hant.md`](sdcl_zh_hant.md)
 - **Simplified Chinese (简体中文):** [`sdcl_zh_hans.md`](sdcl_zh_hans.md)
+- **Traditional Chinese (繁體中文):** [`sdcl_zh_hant.md`](sdcl_zh_hant.md)
 
 Each document provides a comprehensive guide to SDCL's syntax, semantics, data types, and referencing mechanisms.
 
