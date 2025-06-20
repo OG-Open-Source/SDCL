@@ -1,348 +1,348 @@
 organization: {
-	name = GlobalTech Solutions Inc.
-	id = ORG-GTS-001
-	region = APAC
-	version = 1.5.0
-	deployment_date = 2025-06-11T14:30:00Z
+	name "GlobalTech Solutions Inc."
+	id "ORG-GTS-001"
+	region "APAC"
+	version "1.5.0"
+	deployment_date "2025-06-11T14:30:00Z"
 	services: [
 		{
-			service_id = SVC-API-001
-			name = User Management API
-			type = RESTful
-			status = active
+			service_id "SVC-API-001"
+			name "User Management API"
+			type "RESTful"
+			status "active"
 			endpoints: [
 				{
-					path = /users
-					method = GET
-					auth_required = true
-					rate_limit = 100
+					path "/users"
+					method "GET"
+					auth_required true
+					rate_limit 100
 				}
 				{
-					path = /users/{id}
-					method = GET
-					auth_required = true
-					rate_limit = 50
+					path "/users/{id}"
+					method "GET"
+					auth_required true
+					rate_limit 50
 				}
 				{
-					path = /users
-					method = POST
-					auth_required = true
-					rate_limit = 20
+					path "/users"
+					method "POST"
+					auth_required true
+					rate_limit 20
 				}
 				{
-					path = /users/{id}
-					method = PUT
-					auth_required = true
-					rate_limit = 20
+					path "/users/{id}"
+					method "PUT"
+					auth_required true
+					rate_limit 20
 				}
 				{
-					path = /users/{id}
-					method = DELETE
-					auth_required = true
-					rate_limit = 10
+					path "/users/{id}"
+					method "DELETE"
+					auth_required true
+					rate_limit 10
 				}
 			]
 			dependencies: [
-				DB-USERS-001
-				SVC-AUTH-002
+				"DB-USERS-001"
+				"SVC-AUTH-002"
 			]
 			monitoring: {
-				cpu_threshold = 80
-				memory_threshold = 90
+				cpu_threshold 80
+				memory_threshold 90
 				alert_emails: [
-					ops@globaltech.com
-					devs@globaltech.com
+					"ops@globaltech.com"
+					"devs@globaltech.com"
 				]
 			}
-			log_level = INFO
+			log_level "INFO"
 		}
 		{
-			service_id = SVC-ANALYTICS-002
-			name = Data Analytics Engine
-			type = Streaming
-			status = active
+			service_id "SVC-ANALYTICS-002"
+			name "Data Analytics Engine"
+			type "Streaming"
+			status "active"
 			input_topics: [
-				user_events
-				product_logs
+				"user_events"
+				"product_logs"
 			]
 			output_topics: [
-				processed_data_stream
+				"processed_data_stream"
 			]
-			processing_units = 16
+			processing_units 16
 			scalability_options: {
-				min_replicas = 4
-				max_replicas = 32
-				auto_scaling_enabled = true
+				min_replicas 4
+				max_replicas 32
+				auto_scaling_enabled true
 			}
 			integrations: [
 				{
-					name = Kafka
-					version = 3.5
+					name "Kafka"
+					version "3.5"
 				}
 				{
-					name = Spark
-					version = 3.4
+					name "Spark"
+					version "3.4"
 				}
 			]
-			log_level = DEBUG
+			log_level "DEBUG"
 		}
 		{
-			service_id = SVC-PAYMENT-003
-			name = Payment Gateway Service
-			type = RPC
-			status = active
+			service_id "SVC-PAYMENT-003"
+			name "Payment Gateway Service"
+			type "RPC"
+			status "active"
 			providers: [
-				Stripe
-				PayPal
+				"Stripe"
+				"PayPal"
 			]
 			security_config: {
-				encryption_algo = AES-256
-				pci_compliance = true
+				encryption_algo "AES-256"
+				pci_compliance true
 			}
-			audit_trail_enabled = true
-			log_level = WARN
+			audit_trail_enabled true
+			log_level "WARN"
 		}
 	]
 	databases: [
 		{
-			db_id = DB-USERS-001
-			name = UserDB
-			type = MongoDB
-			version = 6.0
-			cluster_size = 7
-			backup_frequency = daily
-			replication_factor = 3
+			db_id "DB-USERS-001"
+			name "UserDB"
+			type "MongoDB"
+			version "6.0"
+			cluster_size 7
+			backup_frequency "daily"
+			replication_factor 3
 			security: {
-				encryption_at_rest = true
-				tls_enabled = true
+				encryption_at_rest true
+				tls_enabled true
 			}
 		}
 		{
-			db_id = DB-PRODUCTS-002
-			name = ProductCatalog
-			type = PostgreSQL
-			version = 15.0
-			cluster_size = 3
-			backup_frequency = hourly
-			read_replicas = 2
+			db_id "DB-PRODUCTS-002"
+			name "ProductCatalog"
+			type "PostgreSQL"
+			version "15.0"
+			cluster_size 3
+			backup_frequency "hourly"
+			read_replicas 2
 		}
 	]
 	users: [
 		{
-			user_id = USR-00001
-			username = alice.smith
-			email = alice.smith@globaltech.com
-			role = admin
-			status = active
-			last_login = 2025-06-11T13:45:10Z
+			user_id "USR-00001"
+			username "alice.smith"
+			email "alice.smith@globaltech.com"
+			role "admin"
+			status "active"
+			last_login "2025-06-11T13:45:10Z"
 			preferences: {
-				theme = dark
-				notifications_enabled = true
-				language = en-US
+				theme "dark"
+				notifications_enabled true
+				language "en-US"
 			}
 			permissions: [
-				service_admin
-				db_access
-				analytics_viewer
+				"service_admin"
+				"db_access"
+				"analytics_viewer"
 			]
 		}
 		{
-			user_id = USR-00002
-			username = bob.johnson
-			email = bob.johnson@globaltech.com
-			role = developer
-			status = active
-			last_login = 2025-06-11T12:00:00Z
+			user_id "USR-00002"
+			username "bob.johnson"
+			email "bob.johnson@globaltech.com"
+			role "developer"
+			status "active"
+			last_login "2025-06-11T12:00:00Z"
 			preferences: {
-				theme = light
-				notifications_enabled = false
-				language = zh-TW
+				theme "light"
+				notifications_enabled false
+				language "zh-TW"
 			}
 			permissions: [
-				service_viewer
-				code_contributor
+				"service_viewer"
+				"code_contributor"
 			]
 		}
 		{
-			user_id = USR-00003
-			username = charlie.brown
-			email = charlie.brown@globaltech.com
-			role = auditor
-			status = inactive
-			last_login = 2025-05-20T09:00:00Z
+			user_id "USR-00003"
+			username "charlie.brown"
+			email "charlie.brown@globaltech.com"
+			role "auditor"
+			status "inactive"
+			last_login "2025-05-20T09:00:00Z"
 			preferences: {
-				theme = system
-				notifications_enabled = true
-				language = en-US
+				theme "system"
+				notifications_enabled true
+				language "en-US"
 			}
 			permissions: [
-				audit_logs_viewer
+				"audit_logs_viewer"
 			]
 		}
 		{
-			user_id = USR-00004
-			username = diana.prince
-			email = diana.prince@globaltech.com
-			role = manager
-			status = active
-			last_login = 2025-06-10T18:00:00Z
+			user_id "USR-00004"
+			username "diana.prince"
+			email "diana.prince@globaltech.com"
+			role "manager"
+			status "active"
+			last_login "2025-06-10T18:00:00Z"
 			preferences: {
-				theme = dark
-				notifications_enabled = true
-				language = en-US
+				theme "dark"
+				notifications_enabled true
+				language "en-US"
 			}
 			permissions: [
-				project_manager
-				budget_approver
+				"project_manager"
+				"budget_approver"
 			]
 		}
 		{
-			user_id = USR-00005
-			username = eve.adams
-			email = eve.adams@globaltech.com
-			role = support
-			status = active
-			last_login = 2025-06-11T10:00:00Z
+			user_id "USR-00005"
+			username "eve.adams"
+			email "eve.adams@globaltech.com"
+			role "support"
+			status "active"
+			last_login "2025-06-11T10:00:00Z"
 			preferences: {
-				theme = light
-				notifications_enabled = true
-				language = fr-FR
+				theme "light"
+				notifications_enabled true
+				language "fr-FR"
 			}
 			permissions: [
-				customer_support_access
+				"customer_support_access"
 			]
 		}
 		{
-			user_id = USR-00006
-			username = frank.white
-			email = frank.white@globaltech.com
-			role = developer
-			status = active
-			last_login = 2025-06-11T09:30:00Z
+			user_id "USR-00006"
+			username "frank.white"
+			email "frank.white@globaltech.com"
+			role "developer"
+			status "active"
+			last_login "2025-06-11T09:30:00Z"
 			preferences: {
-				theme = system
-				notifications_enabled = false
-				language = es-ES
+				theme "system"
+				notifications_enabled false
+				language "es-ES"
 			}
 			permissions: [
-				code_contributor
+				"code_contributor"
 			]
 		}
 		{
-			user_id = USR-00007
-			username = grace.taylor
-			email = grace.taylor@globaltech.com
-			role = analyst
-			status = active
-			last_login = 2025-06-10T16:00:00Z
+			user_id "USR-00007"
+			username "grace.taylor"
+			email "grace.taylor@globaltech.com"
+			role "analyst"
+			status "active"
+			last_login "2025-06-10T16:00:00Z"
 			preferences: {
-				theme = dark
-				notifications_enabled = true
-				language = en-US
+				theme "dark"
+				notifications_enabled true
+				language "en-US"
 			}
 			permissions: [
-				data_viewer
-				report_generator
+				"data_viewer"
+				"report_generator"
 			]
 		}
 		{
-			user_id = USR-00008
-			username = helen.green
-			email = helen.green@globaltech.com
-			role = qa_tester
-			status = active
-			last_login = 2025-06-11T11:00:00Z
+			user_id "USR-00008"
+			username "helen.green"
+			email "helen.green@globaltech.com"
+			role "qa_tester"
+			status "active"
+			last_login "2025-06-11T11:00:00Z"
 			preferences: {
-				theme = light
-				notifications_enabled = true
-				language = de-DE
+				theme "light"
+				notifications_enabled true
+				language "de-DE"
 			}
 			permissions: [
-				qa_test_execution
+				"qa_test_execution"
 			]
 		}
 		{
-			user_id = USR-00009
-			username = ivan.novak
-			email = ivan.novak@globaltech.com
-			role = security_engineer
-			status = active
-			last_login = 2025-06-11T08:00:00Z
+			user_id "USR-00009"
+			username "ivan.novak"
+			email "ivan.novak@globaltech.com"
+			role "security_engineer"
+			status "active"
+			last_login "2025-06-11T08:00:00Z"
 			preferences: {
-				theme = dark
-				notifications_enabled = true
-				language = ru-RU
+				theme "dark"
+				notifications_enabled true
+				language "ru-RU"
 			}
 			permissions: [
-				security_auditor
-				incident_responder
+				"security_auditor"
+				"incident_responder"
 			]
 		}
 		{
-			user_id = USR-00010
-			username = judy.lee
-			email = judy.lee@globaltech.com
-			role = hr_specialist
-			status = active
-			last_login = 2025-06-10T09:00:00Z
+			user_id "USR-00010"
+			username "judy.lee"
+			email "judy.lee@globaltech.com"
+			role "hr_specialist"
+			status "active"
+			last_login "2025-06-10T09:00:00Z"
 			preferences: {
-				theme = system
-				notifications_enabled = false
-				language = ko-KR
+				theme "system"
+				notifications_enabled false
+				language "ko-KR"
 			}
 			permissions: [
-				hr_data_viewer
+				"hr_data_viewer"
 			]
 		}
 	]
 	configurations: {
 		network_settings: {
-			vpc_id = vpc-0abc123def456ghi
+			vpc_id "vpc-0abc123def456ghi"
 			subnets: [
-				subnet-01
-				subnet-02
-				subnet-03
+				"subnet-01"
+				"subnet-02"
+				"subnet-03"
 			]
 			firewall_rules: [
 				{
-					name = allow_http
-					port = 80
-					protocol = tcp
-					source = 0.0.0.0/0
+					name "allow_http"
+					port 80
+					protocol "tcp"
+					source "0.0.0.0/0"
 				}
 				{
-					name = allow_https
-					port = 443
-					protocol = tcp
-					source = 0.0.0.0/0
+					name "allow_https"
+					port 443
+					protocol "tcp"
+					source "0.0.0.0/0"
 				}
 				{
-					name = allow_ssh
-					port = 22
-					protocol = tcp
-					source = 10.0.0.0/8
+					name "allow_ssh"
+					port 22
+					protocol "tcp"
+					source "10.0.0.0/8"
 				}
 			]
 			dns_servers: [
-				8.8.8.8
-				8.8.4.4
+				"8.8.8.8"
+				"8.8.4.4"
 			]
 		}
 		security_policies: {
-			mfa_required = true
+			mfa_required true
 			password_complexity: {
-				min_length = 12
-				require_uppercase = true
-				require_lowercase = true
-				require_numbers = true
-				require_symbols = true
+				min_length 12
+				require_uppercase true
+				require_lowercase true
+				require_numbers true
+				require_symbols true
 			}
-			session_timeout_minutes = 30
+			session_timeout_minutes 30
 		}
 		feature_toggles: {
-			new_dashboard_enabled = true
-			beta_feature_x_enabled = false
-			dark_mode_default = true
+			new_dashboard_enabled true
+			beta_feature_x_enabled false
+			dark_mode_default true
 		}
 	}
 }

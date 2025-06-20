@@ -2,147 +2,129 @@
 
 ## 1. Scope
 
-This document defines the syntax and core features of SDCL (OGATA's Standard Data Character Storage Language). SDCL is designed as a simple, human-readable, and machine-parsable data storage format, specifically for configuration management and data referencing. This specification covers the structure of SDCL documents, assignment syntax, and referencing mechanisms.
+This document defines the syntax and core features of SDCL (OGATA's Standard Data Character Storage Language). SDCL is a human-readable data format designed for simplicity and clarity in configuration files.
 
-This specification is intended for SDCL parser developers and application developers who need a straightforward format for configuration. SDCL's design prioritizes simplicity and strictness to ensure unambiguous parsing.
+## 2. Document Structure
 
-This specification does not cover the implementation details of SDCL parsers in specific programming languages.
+- **Character Encoding:** SDCL files **must** be encoded in UTF-8.
+- **Line Endings:** The newline character (`\n`, LF) is the standard line separator. Parsers **must** ignore carriage return characters (`\r`, CR).
+- **Indentation:** Indentation **must** be done using tabs (`\t`). The use of spaces for indentation is **not allowed**.
 
-## 2. Terms and Definitions
+## 3. Core Components
 
-This document uses the following terms and definitions:
+### 3.1. Key-Value Pairs
 
-- **Object:** An unordered collection of key-value pairs enclosed in curly braces `{}`.
-- **Array:** An ordered collection of values enclosed in square brackets `[]`.
-- **Key:** The name used to identify a data item.
-- **Value:** The data associated with a key. All values are treated as strings.
-- **Path:** A sequence of keys separated by dots (`.`), used to uniquely identify a nested value or structure.
-- **Reference:** A mechanism that allows a value to link to another value or content within the same file or from an external source.
-- **Parser:** A software component that reads an SDCL document and converts it into an internal data structure.
-
-## 3. Symbols and Abbreviations
-
-- **SDCL:** OGATA's Standard Data Character Storage Language.
-- **UTF-8:** A widely used Unicode character encoding scheme.
-
-## 4. Specification
-
-### 4.1. Document Structure
-
-- **Character Encoding:** SDCL documents **must** be encoded in UTF-8.
-- **Line Endings:** The newline character (`\n`, LF) is used to separate entries. Parsers **must** ignore the carriage return character (`\r`, CR) when present.
-- **Indentation:** Indentation **must** be done using tabs (`\t`). The use of spaces for indentation is **not allowed**. This ensures consistent formatting across all documents.
-
-### 4.2. Syntax Rules
-
-- **Assignment Syntax:** SDCL uses distinct operators for assigning simple values versus structured types.
-
-  - **Simple Value Assignment (`=`):** To assign a value to a key, the equals sign (`=`) **must** be used.
-    - `key = value`
-  - **Structured Type Assignment (`:`):** To assign an object (`{...}`) or an array (`[...]`) to a key, the colon (`:`) **must** be used.
-    - `key: { ... }`
-    - `key: [ ... ]`
-
+- The basic structure of SDCL is the key-value pair.
+- **Syntax:** `KEY VALUE`
+- A key and its value are separated by one or more spaces.
 - **Keys:**
-
-  - Key names **must not** contain spaces, dots (`.`), or be enclosed in quotes.
-  - Full paths (e.g., `XXX.YYY.ZZZ`) are used to represent nested structures, where each dot indicates a deeper level of nesting.
-  - Within the same object, duplicate key names are **not allowed**. A parser **must** report an error if duplicates are found.
-
+  - **Must not** contain spaces.
+  - The dot (`.`) character is a valid part of a key and does not represent a hierarchy.
+  - Keys are case-sensitive.
 - **Values:**
+  - Values are parsed literally from the first non-space character after the key to the end of the line.
+  - A value is treated as a `string` and **must** be enclosed in double quotes (`""`), unless it is a `number`, `boolean`, `null`, or a reference.
+  - For example, `"My Awesome App"` is a single string value.
+  - Double quotes (`""`) are mandatory for string values to avoid ambiguity with other data types.
 
-  - All values are treated as literal strings. They **must not** be enclosed in quotes.
-  - A value consists of all characters from the first non-whitespace character after the `=` operator to the end of the line (before any comment).
-  - Leading and trailing whitespace in a value **should** be trimmed by the parser.
+### 3.2. Data Types
 
-- **Objects and Arrays:**
+SDCL defines several data types for clarity and structure:
 
-  - Objects are defined by `key: { ... }`.
-  - Arrays are defined by `key: [ ... ]`.
-  - Elements within objects and arrays are separated by newlines.
+- **`string`:** A sequence of characters enclosed in double quotes (`""`). This is required for all textual data to distinguish it from other types like `number`, `boolean`, `null`, or references.
+- **`number`:** Represents both integers and floating-point numbers.
+- **`boolean`:** `true` or `false`.
+- **`null`:** Represents the absence of a value.
+- **`object`:** A collection of key-value pairs, enclosed in curly braces (`{}`).
+- **`array`:** An ordered list of values, enclosed in square brackets (`[]`).
+- **`insertion`:** A mechanism to include or merge data, denoted by parentheses (`()`).
 
-- **Comments:**
-  - Comments begin with a hash symbol (`#`) and continue to the end of the line.
-  - Comments **must** appear on their own dedicated line. End-of-line comments are invalid.
+### 3.3. Comments
 
-### 4.3. Referencing
+- Comments start with a hash symbol (`#`) and extend to the end of the line.
+- Comments **must** be on their own line.
 
-SDCL supports referencing to enhance data reusability.
+## 4. Advanced Features
 
-- **Value Reference:**
+### 4.1. Objects (Dictionaries/Maps)
 
-  - **Syntax:** `key = (path.to.value)`
-  - **Purpose:** Assigns the value of another key to the current key.
+- Objects are used to group related key-value pairs.
+- **Syntax:**
+  ```sdcl
+  key: {
+  	inner_key1 "value1"
+  	inner_key2 "value2"
+  }
+  ```
+- The opening brace `{` must be on the same line as the key and colon, and the closing brace `}` must be on a new line.
 
-- **Content Inclusion (Objects/Arrays):**
+### 4.2. Arrays (Lists)
 
-  - **Syntax (without key):** `(path.to.structure)`
-  - **Purpose:** Embeds the content of a referenced object or array into the current scope.
-  - **Syntax (with key):** `((path.to.structure))`
-  - **Purpose:** Embeds an entire structure, including its key, into the current scope.
+- Arrays are ordered collections of values.
+- **Syntax:**
+  ```sdcl
+  key: [
+  	"value1"
+  	"a string value"
+  	123
+  	true
+  ]
+  ```
+- The opening bracket `[` must be on the same line as the key and colon, and the closing bracket `]` must be on a new line.
 
-- **External References:**
-  - **Environment Variable:** `key = .env.VAR_NAME`
-  - **File Reference:** `key = .path/to/file.sdcl.key`
+### 4.3. Referencing and Inclusion
 
-### 4.4. Front Matter (Metadata Block)
+SDCL supports referencing to reuse data.
 
-SDCL supports an optional "front matter" block for embedding metadata at the beginning of a file.
+- **Internal Reference (Insertion):**
 
-- **Syntax:** A front matter block **must** begin on the first line of a file and be enclosed by lines containing only three hyphens (`---`).
-- **Parsing:** The content between the `---` delimiters is parsed as a standard SDCL document. All content following the closing `---` is ignored by the SDCL parser.
+  - **Syntax:** `(path.to.value)`
+  - **Purpose:** Inserts the value of another key. If used at the top level of an object, it merges the referenced object's content.
 
-## 5. SDCL Syntax Examples
+- **External Reference:**
+  - **Syntax:** `.[source].(key)`
+  - **Environment Variables:** `.[env].(VAR_NAME)`
+  - **File Inclusion:** `.[path/to/file.sdcl].(key_in_file)`
+
+## 5. Front Matter
+
+- SDCL supports an optional "front matter" block for metadata, enclosed by `---` at the beginning of a file.
+- The content within the `---` is parsed as SDCL. The content after is ignored.
+
+## 6. Syntax Examples
 
 ```sdcl
-# This is a comment.
+# Basic key-value pairs
+app.name "My Awesome App"
+app.version "1.0.0"
+is_enabled true
 
-# --- Basic Assignments ---
-application.name = My SDCL App
-application.version = 1.2.0
-application.enabled = true
-
-# --- Object Assignment ---
-server: {
-	port = 8080
-	host = localhost
+# Object definition
+database: {
+	host "localhost"
+	port 5432
+	user "admin"
+	password .[env].(DB_PASS) # External reference
 }
 
-# --- Array Assignment ---
+# Array definition
 features: [
-	userManagement
-	reporting
-	notifications
+	"User Authentication"
+	"Data Processing"
+	"reporting"
 ]
 
-# --- Nested Structures ---
-database.connection: {
-	user = admin
-	password = (database.credentials.password) # Value Reference
-}
-database.credentials.password = .env.DB_PASSWORD # External Reference
-
-# --- Content Inclusion ---
-default_settings: {
-	timeout = 30
-	retries = 3
+# Inclusion
+base_settings: {
+	timeout 30
+	retries 3
 }
 
-service_config: {
-	(default_settings) # Includes timeout and retries
-	retries = 5        # Overrides the included value
+production_settings: {
+	(base_settings) # Merges base_settings here
+	timeout 60      # Overrides timeout
 }
 
-# --- Front Matter Example in a Markdown file ---
-# ---
-# title = My Document
-# author = Kilo Code
-# tags: [ sdcl specs example ]
-# ---
-# # Main Content
-# This part is ignored by the SDCL parser.
+# Referencing a value
+admin_user (database.user)
 ```
-
-## 6. Conclusion
-
-This document provides the complete specification for the SDCL data format. Its minimalist design, combining unquoted values with powerful referencing, offers a simple yet effective solution for configuration management.
